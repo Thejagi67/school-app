@@ -1,4 +1,13 @@
-const $=id=>document.getElementById(id);
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDUbpRqEsJpPWiug7HnQMMcfAP6MsQKnCk",
+  authDomain: "school-management-system-a02e7.firebaseapp.com",
+  projectId: "school-management-system-a02e7",
+  storageBucket: "school-management-system-a02e7.firebasestorage.app",
+  messagingSenderId: "958260851540",
+  appId: "1:958260851540:web:a5a1ee0719f29fc2588ec1",
+  measurementId: "G-PMY610FVNQ"
+};const $=id=>document.getElementById(id);
 const students=[{name:"Aarav Sharma",roll:"CIC1001",password:"student123",cls:"Class 10-A",attendance:"92%",initials:"AS"},{name:"Ananya Verma",roll:"CIC1002",password:"student123",cls:"Class 9-B",attendance:"96%",initials:"AV"},{name:"Rohan Singh",roll:"CIC1003",password:"student123",cls:"Class 8-A",attendance:"89%",initials:"RS"},{name:"Priya Gupta",roll:"CIC1004",password:"student123",cls:"Class 11-B",attendance:"94%",initials:"PG"}];
 const sample=[{id:1,title:"Welcome to the new school portal",category:"General",date:"2026-10-09",details:"This is the Christ Inter College demo website. Explore the student dashboard and school information features."},{id:2,title:"Holiday notice — demo example",category:"Holiday",date:"2026-10-07",details:"Sample holiday information only. Confirm actual dates with the school office."},{id:3,title:"Examination information",category:"Exam",date:"2026-10-04",details:"Examination schedules would be shared here in a real system. This is a placeholder."}];
 function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
