@@ -28,7 +28,49 @@ function logout(){student=null;$("roll").value="";$("pass").value="";go("home");
 function renderStudents(){let q=($("search")?.value||"").toLowerCase().trim(),found=students.filter(s=>(s.name+" "+s.roll+" "+s.cls).toLowerCase().includes(q));$("studentResults").innerHTML=found.length?found.map(s=>`<div class="record"><span class="initials">${s.initials}</span><div><strong>${esc(s.name)}</strong><small>${s.roll} · ${s.cls}</small></div></div>`).join(""):'<div class="empty">No matching sample students found.</div>';$("adminStudents").innerHTML=students.map(s=>`<div class="record"><span class="initials">${s.initials}</span><div><strong>${esc(s.name)}</strong><small>${s.roll} · ${s.cls}</small></div></div>`).join("")}
 function renderNotices(){$("latest").textContent=notices[0]?.title||"No notices yet.";$("noticeList").innerHTML=notices.length?[...notices].sort((a,b)=>b.id-a.id).map(n=>`<article class="notice"><small>${esc(n.category)} · ${esc(n.date)}</small><h3>${esc(n.title)}</h3><p>${esc(n.details)}</p></article>`).join(""):'<div class="empty">No notices yet.</div>'}
 $("admissionForm").onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.target).entries());enquiries.unshift({...d,date:new Date().toLocaleDateString("en-IN")});save("cicV2Enquiries",enquiries);e.target.reset();$("admissionMsg").textContent="Demo enquiry saved in this browser. No message was sent to the school.";msg("Demo enquiry saved")};
-$("adminForm").onsubmit=e=>{e.preventDefault();if($("adminUser").value.trim()==="admin"&&$("adminPass").value==="admin123"){ $("adminError").textContent="";go("admin");msg("Demo admin panel opened")}else $("adminError").textContent="Incorrect login. Use admin / admin123."};
+
+$("adminForm").onsubmit = async e => {
+  e.preventDefault();
+
+  const email = $("adminEmail").value.trim();
+  const password = $("adminPass").value;
+
+  $("adminError").textContent = "Checking login...";
+
+  try {
+    const result = await auth.signInWithEmailAndPassword(
+      email,
+      password
+    );
+
+    const user = result.user;
+
+    const adminDoc = await db
+      .collection("admins")
+      .doc(user.uid)
+      .get();
+
+    if (
+      !adminDoc.exists ||
+      adminDoc.data().role !== "superAdmin" ||
+      adminDoc.data().status !== "active"
+    ) {
+      await auth.signOut();
+      throw new Error("Admin access not authorized.");
+    }
+
+    $("adminError").textContent = "";
+    go("admin");
+    msg("Admin login successful");
+
+  } catch (error) {
+    $("adminError").textContent =
+      error.message === "Admin access not authorized."
+        ? error.message
+        : "Login failed. Check your email and password.";
+  }
+};
+
 $("noticeForm").onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.target).entries());notices.unshift({id:Date.now(),title:d.title.trim(),category:d.category,date:new Date().toISOString().slice(0,10),details:d.details.trim()});save("cicV2Notices",notices);e.target.reset();renderAdmin();renderNotices();msg("Notice published in this browser")};
 function renderAdmin(){$("studentCount").textContent=students.length;$("enquiryCount").textContent=enquiries.length;$("noticeCount").textContent=notices.length;$("enquiryList").innerHTML=enquiries.length?enquiries.map(e=>`<div class="record"><div><strong>${esc(e.student)} · ${esc(e.className)}</strong><small>Guardian: ${esc(e.guardian)} · Contact: ${esc(e.contact)} · ${esc(e.date)}</small>${e.message?`<p>${esc(e.message)}</p>`:""}</div></div>`).join(""):'<div class="empty">No demo enquiries yet. Try the admission form.</div>';renderStudents()}
 function clearEnquiries(){if(!enquiries.length){msg("No entries to clear");return}if(confirm("Clear demo enquiries saved in this browser?")){enquiries=[];save("cicV2Enquiries",enquiries);renderAdmin();msg("Demo entries cleared")}}
