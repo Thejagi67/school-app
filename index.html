@@ -1,33 +1,311 @@
 <!doctype html>
-<html lang="en"><head><link rel="manifest" href="manifest.json"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#123b72"><title>School app| Demo V2</title><link rel="stylesheet" href="style.css"></head>
-<body><div class="app"><header><div class="logo">CIC</div><div><h1>School app</h1><small>Student & School Information Portal</small></div><button onclick="go('home')">⌂</button></header><main>
-<section id="home" class="screen active"><div class="hero"><small>WELCOME TO</small><h2>School app</h2><p>School updates, student information and admission enquiries — in one place.</p><button class="gold" onclick="go('login')">Student Login</button> <button class="outline" onclick="go('admission')">Online Admission</button></div><div class="ticker" id="latest">Welcome! Check notices for updates.</div><h3>Quick access</h3><div class="grid"><button class="tile" onclick="go('login')">🎓<b>Student Login</b><small>Open dashboard</small></button><button class="tile" onclick="go('students')">🔎<b>Student Search</b><small>Demo directory</small></button><button class="tile" onclick="go('notices')">📢<b>Notices & Holidays</b><small>School updates</small></button><button class="tile" onclick="go('admission')">📝<b>Admission Form</b><small>Demo enquiry</small></button></div><div class="warning"><b>Demo version</b><p>Sample information only. Do not enter real student details or sensitive information.</p></div><button class="link" onclick="go('adminLogin')">School Admin Demo Login →</button></section>
-<section id="login" class="screen"><button class="back" onclick="go('home')">← Home</button><h2>Student Login</h2><p class="muted">Demo accounts only.</p><form id="loginForm" class="panel stack"><label>Roll number<input id="roll" required placeholder="CIC1001"></label><label>Password<input id="pass" type="password" required placeholder="student123"></label><button class="primary">Login</button><p id="loginError" class="error"></p></form><div class="panel"><b>Demo accounts</b><p>CIC1001 / student123</p><p>CIC1002 / student123</p><p>CIC1003 / student123</p><p>CIC1004 / student123</p><button class="link" onclick="fillLogin()">Fill first account</button></div></section>
-<section id="dashboard" class="screen"><h2 id="greeting">Student Dashboard</h2><div class="panel"><small>DEMO STUDENT PROFILE</small><h3 id="pname"></h3><div class="details"><div>Roll number<br><b id="proll"></b></div><div>Class<br><b id="pclass"></b></div><div>Session<br><b>2026–27</b></div><div>Attendance<br><b id="attendance"></b></div></div></div><div class="grid"><button class="tile" onclick="go('notices')">📢<b>Notices</b></button><button class="tile" onclick="go('students')">🔎<b>Find Student</b></button><button class="tile" onclick="go('admission')">📝<b>Admission</b></button><button class="tile" onclick="switchAccount()">🔁<b>Switch Account</b></button></div><div class="panel" id="dashNotice"></div><button class="secondary wide" onclick="logout()">Log out</button></section>
-<section id="students" class="screen"><button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button><h2>Student Search</h2><input id="search" class="search" placeholder="Search name or roll number" oninput="renderStudents()"><div id="studentResults" class="list"></div><p class="muted">Sample records only. Real student directories should be private.</p></section>
-<section id="notices" class="screen"><button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button><h2>Notices & Holidays</h2><div id="noticeList" class="list"></div><div class="warning">Notices appear on this website. Push notifications are not connected.</div></section>
-<section id="admission" class="screen"><button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button><h2>Online Admission Enquiry</h2><form id="admissionForm" class="panel stack"><label>Student full name<input name="student" required></label><label>Class applying for<select name="className" required><option value="">Choose class</option><option>Nursery</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></label><label>Parent/guardian name<input name="guardian" required></label><label>Contact number<input name="contact" required inputmode="tel" pattern="[0-9+\-\s]{8,16}" placeholder="Demo number only"></label><label>Message<textarea name="message" rows="3"></textarea></label><div class="warning">Demo only. Do not enter real phone numbers or sensitive information.</div><button class="primary">Submit Demo Enquiry</button><p id="admissionMsg" class="success"></p></form></section>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#b5121b">
+<meta name="description" content="Mata Santi Devi English Academy - School Management Portal">
+<link rel="manifest" href="manifest.json">
+<title>M.S.D. English Academy | School App</title>
+<link rel="stylesheet" href="style.css">
+</head>
 
-<section id="adminLogin" class="screen">
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <img src="icon-192-1.png" alt="M.S.D. School Logo"
+    style="width:55px;height:55px;object-fit:contain;border-radius:50%;background:white">
+  </div>
+  <div>
+    <h1>M.S.D. ENGLISH ACADEMY</h1>
+    <small>MATA SANTI DEVI ENGLISH ACADEMY</small>
+  </div>
+  <button onclick="go('home')">⌂</button>
+</header>
+
+<main>
+
+<!-- HOME -->
+<section id="home" class="screen active">
+
+<div class="hero">
+  <small>WELCOME TO</small>
+  <h2>M.S.D. ENGLISH ACADEMY</h2>
+  <p>Education, Discipline and Excellence</p>
+  <p>Khushnampur Dariyapur, Newada, Azamgarh, Uttar Pradesh</p>
+
+  <button class="gold" onclick="go('login')">Student Login</button>
+  <button class="outline" onclick="go('admission')">Online Admission</button>
+</div>
+
+<div class="ticker" id="latest">
+Welcome to M.S.D. English Academy!
+</div>
+
+<h3>School Portal</h3>
+
+<div class="grid">
+<button class="tile" onclick="go('login')">
+🎓<b>Student Login</b><small>Student Dashboard</small>
+</button>
+
+<button class="tile" onclick="go('students')">
+🔎<b>Student Search</b><small>Student Directory</small>
+</button>
+
+<button class="tile" onclick="go('notices')">
+📢<b>Notices & Holidays</b><small>School Updates</small>
+</button>
+
+<button class="tile" onclick="go('admission')">
+📝<b>Admission Form</b><small>New Admission</small>
+</button>
+</div>
+
+<div class="panel">
+<h3>Our School</h3>
+<p>Mata Santi Devi English Academy is committed to providing quality education and supporting the overall development of students.</p>
+</div>
+
+<div class="warning">
+<b>School Portal</b>
+<p>Some features are currently under development.</p>
+</div>
+
+<button class="link" onclick="go('adminLogin')">
+School Admin Login →
+</button>
+
+</section>
+
+<!-- STUDENT LOGIN -->
+<section id="login" class="screen">
+
 <button class="back" onclick="go('home')">← Home</button>
-<h2>School Admin Login</h2>
+<h2>Student Login</h2>
 
-<form id="adminForm" class="panel stack">
-<label>Email Address
-<input id="adminEmail" type="email" required placeholder="Enter admin email">
+<form id="loginForm" class="panel stack">
+
+<label>Roll Number
+<input id="roll" required placeholder="Enter Roll Number">
 </label>
 
 <label>Password
-<input id="adminPass" type="password" required placeholder="Enter password">
+<input id="pass" type="password" required placeholder="Enter Password">
+</label>
+
+<button class="primary">Login</button>
+<p id="loginError" class="error"></p>
+
+</form>
+</section>
+
+<!-- STUDENT DASHBOARD -->
+<section id="dashboard" class="screen">
+
+<h2 id="greeting">Student Dashboard</h2>
+
+<div class="panel">
+<small>STUDENT PROFILE</small>
+<h3 id="pname"></h3>
+
+<div class="details">
+<div>Roll Number<br><b id="proll"></b></div>
+<div>Class<br><b id="pclass"></b></div>
+<div>Session<br><b>2026–27</b></div>
+<div>Attendance<br><b id="attendance"></b></div>
+</div>
+</div>
+
+<div class="grid">
+<button class="tile" onclick="go('notices')">📢<b>Notices</b></button>
+<button class="tile" onclick="go('students')">🔎<b>Students</b></button>
+<button class="tile" onclick="go('admission')">📝<b>Admission</b></button>
+<button class="tile" onclick="switchAccount()">🔁<b>Switch Account</b></button>
+</div>
+
+<div class="panel" id="dashNotice"></div>
+
+<button class="secondary wide" onclick="logout()">Log Out</button>
+</section>
+
+<!-- STUDENT SEARCH -->
+<section id="students" class="screen">
+
+<button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button>
+
+<h2>Student Search</h2>
+
+<input id="search" class="search"
+placeholder="Search name or roll number"
+oninput="renderStudents()">
+
+<div id="studentResults" class="list"></div>
+
+</section>
+
+<!-- NOTICES -->
+<section id="notices" class="screen">
+
+<button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button>
+
+<h2>Notices & Holidays</h2>
+
+<div id="noticeList" class="list"></div>
+
+</section>
+
+<!-- ADMISSION -->
+<section id="admission" class="screen">
+
+<button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button>
+
+<h2>Online Admission Enquiry</h2>
+
+<form id="admissionForm" class="panel stack">
+
+<label>Student Full Name
+<input name="student" required>
+</label>
+
+<label>Class Applying For
+<select name="className" required>
+<option value="">Choose Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>Class 1</option>
+<option>Class 2</option>
+<option>Class 3</option>
+<option>Class 4</option>
+<option>Class 5</option>
+<option>Class 6</option>
+<option>Class 7</option>
+<option>Class 8</option>
+<option>Class 9</option>
+<option>Class 10</option>
+<option>Class 11</option>
+<option>Class 12</option>
+</select>
+</label>
+
+<label>Parent / Guardian Name
+<input name="guardian" required>
+</label>
+
+<label>Contact Number
+<input name="contact" required inputmode="tel">
+</label>
+
+<label>Message
+<textarea name="message" rows="3"></textarea>
+</label>
+
+<button class="primary">Submit Enquiry</button>
+
+<p id="admissionMsg" class="success"></p>
+
+</form>
+</section>
+
+<!-- ADMIN LOGIN -->
+<section id="adminLogin" class="screen">
+
+<button class="back" onclick="go('home')">← Home</button>
+
+<h2>School Admin Login</h2>
+
+<form id="adminForm" class="panel stack">
+
+<label>Email Address
+<input id="adminEmail" type="email" required placeholder="Admin Email">
+</label>
+
+<label>Password
+<input id="adminPass" type="password" required placeholder="Password">
 </label>
 
 <button class="primary">Admin Login</button>
+
 <p id="adminError" class="error"></p>
+
 </form>
 </section>
-  
-<section id="admin" class="screen"><h2>Admin Panel</h2><div class="panel"><h3>Publish a notice</h3><form id="noticeForm" class="stack"><label>Title<input name="title" required></label><label>Category<select name="category"><option>General</option><option>Holiday</option><option>Exam</option><option>Event</option></select></label><label>Details<textarea name="details" required></textarea></label><button class="primary">Publish Notice</button></form></div><div class="panel"><h3>Admission enquiries</h3><button class="link" onclick="clearEnquiries()">Clear entries</button><div id="enquiryList" class="list"></div></div><div class="panel"><h3>Student records</h3><div id="adminStudents" class="list"></div></div><button class="secondary wide" onclick="go('home')">Exit Admin Panel</button></section>
-</main><nav><button onclick="go('home')">⌂<small>Home</small></button><button onclick="go('notices')">▤<small>Notices</small></button><button onclick="go('students')">⌕<small>Students</small></button><button onclick="go('admission')">＋<small>Admission</small></button></nav><footer>school app<span>Demo App V2 · Browser website</span></footer></div><div id="toast" class="toast"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<!-- ADMIN PANEL -->
+<section id="admin" class="screen">
+
+<h2>School Admin Panel</h2>
+
+<div class="panel">
+<h3>Publish School Notice</h3>
+
+<form id="noticeForm" class="stack">
+
+<label>Notice Title
+<input name="title" required>
+</label>
+
+<label>Category
+<select name="category">
+<option>General</option>
+<option>Holiday</option>
+<option>Exam</option>
+<option>Event</option>
+</select>
+</label>
+
+<label>Notice Details
+<textarea name="details" required></textarea>
+</label>
+
+<button class="primary">Publish Notice</button>
+
+</form>
+</div>
+
+<div class="panel">
+<h3>Admission Enquiries</h3>
+<button class="link" onclick="clearEnquiries()">Clear Entries</button>
+<div id="enquiryList" class="list"></div>
+</div>
+
+<div class="panel">
+<h3>Student Records</h3>
+<div id="adminStudents" class="list"></div>
+</div>
+
+<button class="secondary wide" onclick="go('home')">
+Exit Admin Panel
+</button>
+
+</section>
+
+</main>
+
+<nav>
+<button onclick="go('home')">⌂<small>Home</small></button>
+<button onclick="go('notices')">▤<small>Notices</small></button>
+<button onclick="go('students')">⌕<small>Students</small></button>
+<button onclick="go('admission')">＋<small>Admission</small></button>
+</nav>
+
+<footer>
+M.S.D. ENGLISH ACADEMY
+<span>Mata Santi Devi English Academy</span>
+</footer>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="app.js"></script></body></html>
+
+<script src="app.js"></script>
+
+</body>
+</html>
