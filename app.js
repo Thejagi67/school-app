@@ -1,4 +1,11 @@
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// ==========================================
+// M.S.D. ENGLISH ACADEMY
+// REAL SCHOOL MANAGEMENT APP
+// Firebase Application
+// ==========================================
+
+// 1. FIREBASE CONFIGURATION
+
 const firebaseConfig = {
   apiKey: "AIzaSyDUbpRqEsJpPWiug7HnQMMcfAP6MsQKnCk",
   authDomain: "school-management-system-a02e7.firebaseapp.com",
@@ -9,69 +16,430 @@ const firebaseConfig = {
   measurementId: "G-PMY610FVNQ"
 };
 
-firebase.initializeApp(firebaseConfig);
+// 2. INITIALIZE FIREBASE
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const $=id=>document.getElementById(id);
-const students=[{name:"Aarav Sharma",roll:"CIC1001",password:"student123",cls:"Class 10-A",attendance:"92%",initials:"AS"},{name:"Ananya Verma",roll:"CIC1002",password:"student123",cls:"Class 9-B",attendance:"96%",initials:"AV"},{name:"Rohan Singh",roll:"CIC1003",password:"student123",cls:"Class 8-A",attendance:"89%",initials:"RS"},{name:"Priya Gupta",roll:"CIC1004",password:"student123",cls:"Class 11-B",attendance:"94%",initials:"PG"}];
-const sample=[{id:1,title:"Welcome to the new school portal",category:"General",date:"2026-10-09",details:"This is the Christ Inter College demo website. Explore the student dashboard and school information features."},{id:2,title:"Holiday notice — demo example",category:"Holiday",date:"2026-10-07",details:"Sample holiday information only. Confirm actual dates with the school office."},{id:3,title:"Examination information",category:"Exam",date:"2026-10-04",details:"Examination schedules would be shared here in a real system. This is a placeholder."}];
-function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-let notices=load("cicV2Notices",sample),enquiries=load("cicV2Enquiries",[]),student=null,previous="home";
-function go(id){let old=document.querySelector(".screen.active");if(old&&old.id!=="adminLogin")previous=old.id;document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));scrollTo({top:0,behavior:"smooth"});if(id==="dashboard")renderDashboard();if(id==="students")renderStudents();if(id==="notices")renderNotices();if(id==="admin")renderAdmin()}
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function msg(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2300)}
-function fillLogin(){$("roll").value="CIC1001";$("pass").value="student123"}
-$("loginForm").onsubmit=e=>{e.preventDefault();student=students.find(s=>s.roll===$("roll").value.trim().toUpperCase()&&s.password===$("pass").value);if(!student){$("loginError").textContent="Login not recognized. Try one of the demo accounts.";return}$("loginError").textContent="";go("dashboard");msg("Demo login successful")};
-function renderDashboard(){if(!student){go("login");return}$("greeting").textContent="Hello, "+student.name.split(" ")[0]+"!";$("pname").textContent=student.name;$("proll").textContent=student.roll;$("pclass").textContent=student.cls;$("attendance").textContent=student.attendance;$("dashNotice").innerHTML=notices[0]?`<b>${esc(notices[0].title)}</b><p>${esc(notices[0].details)}</p>`:"No notices yet."}
-function logout(){student=null;$("roll").value="";$("pass").value="";go("home");msg("Logged out")}function switchAccount(){student=null;$("roll").value="";$("pass").value="";go("login")}
-function renderStudents(){let q=($("search")?.value||"").toLowerCase().trim(),found=students.filter(s=>(s.name+" "+s.roll+" "+s.cls).toLowerCase().includes(q));$("studentResults").innerHTML=found.length?found.map(s=>`<div class="record"><span class="initials">${s.initials}</span><div><strong>${esc(s.name)}</strong><small>${s.roll} · ${s.cls}</small></div></div>`).join(""):'<div class="empty">No matching sample students found.</div>';$("adminStudents").innerHTML=students.map(s=>`<div class="record"><span class="initials">${s.initials}</span><div><strong>${esc(s.name)}</strong><small>${s.roll} · ${s.cls}</small></div></div>`).join("")}
-function renderNotices(){$("latest").textContent=notices[0]?.title||"No notices yet.";$("noticeList").innerHTML=notices.length?[...notices].sort((a,b)=>b.id-a.id).map(n=>`<article class="notice"><small>${esc(n.category)} · ${esc(n.date)}</small><h3>${esc(n.title)}</h3><p>${esc(n.details)}</p></article>`).join(""):'<div class="empty">No notices yet.</div>'}
-$("admissionForm").onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.target).entries());enquiries.unshift({...d,date:new Date().toLocaleDateString("en-IN")});save("cicV2Enquiries",enquiries);e.target.reset();$("admissionMsg").textContent="Demo enquiry saved in this browser. No message was sent to the school.";msg("Demo enquiry saved")};
+const $ = id => document.getElementById(id);
 
-$("adminForm").onsubmit = async e => {
-  e.preventDefault();
+let currentUser = null;
+let isAdmin = false;
+let previous = "home";
+let notices = [];
+let students = [];
 
-  const email = $("adminEmail").value.trim();
-  const password = $("adminPass").value;
+// 3. SCREEN NAVIGATION
 
-  $("adminError").textContent = "Checking login...";
+function go(id) {
+  const old = document.querySelector(".screen.active");
+
+  if (old && old.id !== "adminLogin") {
+    previous = old.id;
+  }
+
+  if (id === "admin" && !isAdmin) {
+    msg("Admin permission required");
+    return;
+  }
+
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.toggle("active", screen.id === id);
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (id === "notices") renderNotices();
+  if (id === "admin") renderAdmin();
+  if (id === "students") renderStudents();
+}
+
+// 4. MESSAGE
+
+function msg(message) {
+  const toast = $("toast");
+
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
+
+// 5. SAFE TEXT
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+// 6. ADMIN LOGIN
+
+if ($("adminForm")) {
+  $("adminForm").onsubmit = async event => {
+    event.preventDefault();
+
+    const email = $("adminEmail").value.trim();
+    const password = $("adminPass").value;
+
+    $("adminError").textContent = "Verifying admin account...";
+
+    try {
+      const result = await auth.signInWithEmailAndPassword(
+        email,
+        password
+      );
+
+      const user = result.user;
+
+      const adminDoc = await db
+        .collection("admins")
+        .doc(user.uid)
+        .get();
+
+      if (!adminDoc.exists) {
+        await auth.signOut();
+        throw new Error("Admin record not found.");
+      }
+
+      const adminData = adminDoc.data();
+
+      if (
+        adminData.role !== "superAdmin" ||
+        adminData.status !== "active"
+      ) {
+        await auth.signOut();
+        throw new Error("Admin access not authorized.");
+      }
+
+      currentUser = user;
+      isAdmin = true;
+
+      $("adminError").textContent = "";
+
+      go("admin");
+      msg("Welcome, Super Admin!");
+
+    } catch (error) {
+      $("adminError").textContent =
+        error.code === "auth/invalid-credential"
+          ? "Incorrect email or password."
+          : error.message;
+
+      console.error("Admin login:", error);
+    }
+  };
+}
+
+// 7. ADMIN SESSION CHECK
+
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+
+  if (!user) {
+    isAdmin = false;
+    return;
+  }
 
   try {
-    const result = await auth.signInWithEmailAndPassword(
-      email,
-      password
-    );
-
-    const user = result.user;
-
-    const adminDoc = await db
-      .collection("admins")
-      .doc(user.uid)
-      .get();
+    const doc = await db.collection("admins").doc(user.uid).get();
 
     if (
-      !adminDoc.exists ||
-      adminDoc.data().role !== "superAdmin" ||
-      adminDoc.data().status !== "active"
+      doc.exists &&
+      doc.data().role === "superAdmin" &&
+      doc.data().status === "active"
     ) {
+      isAdmin = true;
+    } else {
+      isAdmin = false;
       await auth.signOut();
-      throw new Error("Admin access not authorized.");
     }
+  } catch (error) {
+    isAdmin = false;
+    console.error("Admin verification failed:", error);
+  }
+});
 
-    $("adminError").textContent = "";
-    go("admin");
-    msg("Admin login successful");
+// 8. ADMIN LOGOUT
+
+async function adminLogout() {
+  try {
+    await auth.signOut();
+
+    currentUser = null;
+    isAdmin = false;
+
+    go("home");
+    msg("Admin logged out");
 
   } catch (error) {
-    $("adminError").textContent =
-      error.message === "Admin access not authorized."
-        ? error.message
-        : "Login failed. Check your email and password.";
+    msg("Logout failed");
+    console.error(error);
   }
-};
+}
 
-$("noticeForm").onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.target).entries());notices.unshift({id:Date.now(),title:d.title.trim(),category:d.category,date:new Date().toISOString().slice(0,10),details:d.details.trim()});save("cicV2Notices",notices);e.target.reset();renderAdmin();renderNotices();msg("Notice published in this browser")};
-function renderAdmin(){$("studentCount").textContent=students.length;$("enquiryCount").textContent=enquiries.length;$("noticeCount").textContent=notices.length;$("enquiryList").innerHTML=enquiries.length?enquiries.map(e=>`<div class="record"><div><strong>${esc(e.student)} · ${esc(e.className)}</strong><small>Guardian: ${esc(e.guardian)} · Contact: ${esc(e.contact)} · ${esc(e.date)}</small>${e.message?`<p>${esc(e.message)}</p>`:""}</div></div>`).join(""):'<div class="empty">No demo enquiries yet. Try the admission form.</div>';renderStudents()}
-function clearEnquiries(){if(!enquiries.length){msg("No entries to clear");return}if(confirm("Clear demo enquiries saved in this browser?")){enquiries=[];save("cicV2Enquiries",enquiries);renderAdmin();msg("Demo entries cleared")}}
-renderNotices();renderStudents();
+// 9. STUDENT LOGIN
+// Student accounts will be enabled after
+// Admin creates real student accounts.
+
+if ($("loginForm")) {
+  $("loginForm").onsubmit = event => {
+    event.preventDefault();
+
+    $("loginError").textContent =
+      "Student accounts are not created yet. Please contact the school administration.";
+  };
+}
+
+// 10. STUDENT DASHBOARD
+
+function renderDashboard() {
+  if (!currentUser || !isAdmin) {
+    go("home");
+    return;
+  }
+
+  if ($("greeting")) {
+    $("greeting").textContent = "School Administration";
+  }
+
+  if ($("pname")) {
+    $("pname").textContent = "M.S.D. ENGLISH ACADEMY";
+  }
+
+  if ($("proll")) {
+    $("proll").textContent = "Administrator";
+  }
+
+  if ($("pclass")) {
+    $("pclass").textContent = "Super Admin";
+  }
+
+  if ($("attendance")) {
+    $("attendance").textContent = "N/A";
+  }
+}
+
+// 11. LOAD SCHOOL NOTICES
+
+async function renderNotices() {
+  const list = $("noticeList");
+  const latest = $("latest");
+
+  if (!list) return;
+
+  list.innerHTML = '<p>Loading school notices...</p>';
+
+  try {
+    const snapshot = await db
+      .collection("notices")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+
+    notices = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    if (latest) {
+      latest.textContent = notices[0]?.title ||
+        "Welcome to M.S.D. English Academy";
+    }
+
+    list.innerHTML = notices.length
+      ? notices.map(notice => `
+        <article class="notice">
+          <small>${esc(notice.category)} ·
+          ${esc(notice.date || "")}</small>
+          <h3>${esc(notice.title)}</h3>
+          <p>${esc(notice.details)}</p>
+        </article>
+      `).join("")
+      : '<div class="empty">No school notices published yet.</div>';
+
+  } catch (error) {
+    list.innerHTML =
+      '<div class="empty">Unable to load notices. Please try again.</div>';
+
+    console.error("Notice loading:", error);
+  }
+}
+
+// 12. PUBLISH NOTICE
+
+if ($("noticeForm")) {
+  $("noticeForm").onsubmit = async event => {
+    event.preventDefault();
+
+    if (!isAdmin || !currentUser) {
+      msg("Admin login required");
+      return;
+    }
+
+    const data = Object.fromEntries(
+      new FormData(event.target).entries()
+    );
+
+    try {
+      await db.collection("notices").add({
+        title: data.title.trim(),
+        category: data.category,
+        details: data.details.trim(),
+        date: new Date().toLocaleDateString("en-IN"),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: currentUser.uid
+      });
+
+      event.target.reset();
+
+      await renderNotices();
+
+      msg("School notice published successfully");
+
+    } catch (error) {
+      msg("Notice could not be published");
+      console.error("Notice publishing:", error);
+    }
+  };
+}
+
+// 13. ONLINE ADMISSION ENQUIRY
+
+if ($("admissionForm")) {
+  $("admissionForm").onsubmit = async event => {
+    event.preventDefault();
+
+    const data = Object.fromEntries(
+      new FormData(event.target).entries()
+    );
+
+    try {
+      await db.collection("admissions").add({
+        student: data.student.trim(),
+        className: data.className,
+        guardian: data.guardian.trim(),
+        contact: data.contact.trim(),
+        message: data.message.trim(),
+        status: "pending",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      event.target.reset();
+
+      $("admissionMsg").textContent =
+        "Your admission enquiry has been submitted successfully.";
+
+      msg("Admission enquiry submitted");
+
+    } catch (error) {
+      $("admissionMsg").textContent =
+        "Unable to submit enquiry. Please try again.";
+
+      console.error("Admission:", error);
+    }
+  };
+}
+
+// 14. STUDENT DIRECTORY
+
+function renderStudents() {
+  const results = $("studentResults");
+
+  if (results) {
+    results.innerHTML =
+      '<div class="empty">Student accounts will appear here after secure registration by Admin.</div>';
+  }
+
+  const adminList = $("adminStudents");
+
+  if (adminList) {
+    adminList.innerHTML =
+      '<div class="empty">No student accounts registered yet.</div>';
+  }
+}
+
+// 15. ADMIN PANEL
+
+async function renderAdmin() {
+  if (!isAdmin || !currentUser) return;
+
+  renderStudents();
+
+  const enquiryList = $("enquiryList");
+
+  if (enquiryList) {
+    enquiryList.innerHTML = "<p>Loading admission enquiries...</p>";
+
+    try {
+      const snapshot = await db
+        .collection("admissions")
+        .orderBy("createdAt", "desc")
+        .limit(100)
+        .get();
+
+      enquiryList.innerHTML = snapshot.empty
+        ? '<div class="empty">No admission enquiries yet.</div>'
+        : snapshot.docs.map(doc => {
+            const item = doc.data();
+
+            return `
+              <div class="record">
+                <div>
+                  <strong>${esc(item.student)} · ${esc(item.className)}</strong>
+                  <small>Guardian: ${esc(item.guardian)}</small>
+                  <small>Contact: ${esc(item.contact)}</small>
+                  <small>Status: ${esc(item.status)}</small>
+                  ${item.message
+                    ? `<p>${esc(item.message)}</p>`
+                    : ""}
+                </div>
+              </div>
+            `;
+          }).join("");
+
+    } catch (error) {
+      enquiryList.innerHTML =
+        '<div class="empty">Unable to load admission enquiries.</div>';
+
+      console.error("Admission loading:", error);
+    }
+  }
+}
+
+// 16. LOGOUT
+
+function logout() {
+  if (isAdmin) {
+    adminLogout();
+    return;
+  }
+
+  go("home");
+}
+
+function switchAccount() {
+  go("login");
+}
+
+// 17. INITIAL SCREEN
+
+renderStudents();
+
+renderNotices();
+
+console.log(
+  "M.S.D. English Academy School App initialized."
+);
