@@ -7,7 +7,25 @@
 <section id="students" class="screen"><button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button><h2>Student Search</h2><input id="search" class="search" placeholder="Search name or roll number" oninput="renderStudents()"><div id="studentResults" class="list"></div><p class="muted">Sample records only. Real student directories should be private.</p></section>
 <section id="notices" class="screen"><button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button><h2>Notices & Holidays</h2><div id="noticeList" class="list"></div><div class="warning">Notices appear on this website. Push notifications are not connected.</div></section>
 <section id="admission" class="screen"><button class="back" onclick="go(previous==='dashboard'?'dashboard':'home')">← Back</button><h2>Online Admission Enquiry</h2><form id="admissionForm" class="panel stack"><label>Student full name<input name="student" required></label><label>Class applying for<select name="className" required><option value="">Choose class</option><option>Nursery</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></label><label>Parent/guardian name<input name="guardian" required></label><label>Contact number<input name="contact" required inputmode="tel" pattern="[0-9+\-\s]{8,16}" placeholder="Demo number only"></label><label>Message<textarea name="message" rows="3"></textarea></label><div class="warning">Demo only. Do not enter real phone numbers or sensitive information.</div><button class="primary">Submit Demo Enquiry</button><p id="admissionMsg" class="success"></p></form></section>
-<section id="adminLogin" class="screen"><button class="back" onclick="go('home')">← Home</button><h2>Admin Demo Login</h2><form id="adminForm" class="panel stack"><label>Username<input id="adminUser" required></label><label>Password<input id="adminPass" type="password" required></label><button class="primary">Open Admin Panel</button><p id="adminError" class="error"></p><small>Demo login: admin / admin123</small></form></section>
+
+<section id="adminLogin" class="screen">
+<button class="back" onclick="go('home')">← Home</button>
+<h2>School Admin Login</h2>
+
+<form id="adminForm" class="panel stack">
+<label>Email Address
+<input id="adminEmail" type="email" required placeholder="Enter admin email">
+</label>
+
+<label>Password
+<input id="adminPass" type="password" required placeholder="Enter password">
+</label>
+
+<button class="primary">Admin Login</button>
+<p id="adminError" class="error"></p>
+</form>
+</section>
+  
 <section id="admin" class="screen"><h2>Admin Panel</h2><div class="panel"><h3>Publish a notice</h3><form id="noticeForm" class="stack"><label>Title<input name="title" required></label><label>Category<select name="category"><option>General</option><option>Holiday</option><option>Exam</option><option>Event</option></select></label><label>Details<textarea name="details" required></textarea></label><button class="primary">Publish Notice</button></form></div><div class="panel"><h3>Admission enquiries</h3><button class="link" onclick="clearEnquiries()">Clear entries</button><div id="enquiryList" class="list"></div></div><div class="panel"><h3>Student records</h3><div id="adminStudents" class="list"></div></div><button class="secondary wide" onclick="go('home')">Exit Admin Panel</button></section>
 </main><nav><button onclick="go('home')">⌂<small>Home</small></button><button onclick="go('notices')">▤<small>Notices</small></button><button onclick="go('students')">⌕<small>Students</small></button><button onclick="go('admission')">＋<small>Admission</small></button></nav><footer>school app<span>Demo App V2 · Browser website</span></footer></div><div id="toast" class="toast"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
