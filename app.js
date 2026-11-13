@@ -1,10 +1,5 @@
-// ==========================================
-// M.S.D. ENGLISH ACADEMY
-// REAL SCHOOL MANAGEMENT APP
-// Firebase Application
-// ==========================================
 
-// 1. FIREBASE CONFIGURATION
+// M.S.D. ENGLISH ACADEMY - SCHOOL APP
 
 const firebaseConfig = {
   apiKey: "AIzaSyDUbpRqEsJpPWiug7HnQMMcfAP6MsQKnCk",
@@ -16,8 +11,6 @@ const firebaseConfig = {
   measurementId: "G-PMY610FVNQ"
 };
 
-// 2. INITIALIZE FIREBASE
-
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -25,421 +18,333 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const $ = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 let currentUser = null;
-let isAdmin = false;
-let previous = "home";
-let notices = [];
-let students = [];
+let currentRole = null;
+let studentProfile = null;
 
-// 3. SCREEN NAVIGATION
+// Show one screen at a time
+function showScreen(screenId) {
+  [
+    "loginPage",
+    "adminLoginPage",
+    "studentDashboard",
+    "adminDashboard"
+  ].forEach(id => $(id).classList.add("hidden"));
 
-function go(id) {
-  const old = document.querySelector(".screen.active");
-
-  if (old && old.id !== "adminLogin") {
-    previous = old.id;
-  }
-
-  if (id === "admin" && !isAdmin) {
-    msg("Admin permission required");
-    return;
-  }
-
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.toggle("active", screen.id === id);
-  });
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-
-  if (id === "notices") renderNotices();
-  if (id === "admin") renderAdmin();
-  if (id === "students") renderStudents();
+  $(screenId).classList.remove("hidden");
 }
 
-// 4. MESSAGE
-
-function msg(message) {
-  const toast = $("toast");
-
-  if (!toast) return;
-
-  toast.textContent = message;
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2500);
+function showMessage(id, message, success = false) {
+  const element = $(id);
+  element.textContent = message;
+  element.className = success ? "success" : "";
 }
 
-// 5. SAFE TEXT
-
-function esc(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[char]);
+function cleanRollNumber(value) {
+  return value.trim().toUpperCase().replace(/\s+/g, "");
 }
 
-// 6. ADMIN LOGIN
-
-if ($("adminForm")) {
-  $("adminForm").onsubmit = async event => {
-    event.preventDefault();
-
-    const email = $("adminEmail").value.trim();
-    const password = $("adminPass").value;
-
-    $("adminError").textContent = "Verifying admin account...";
-
-    try {
-      const result = await auth.signInWithEmailAndPassword(
-        email,
-        password
-      );
-
-      const user = result.user;
-
-      const adminDoc = await db
-        .collection("admins")
-        .doc(user.uid)
-        .get();
-
-      if (!adminDoc.exists) {
-        await auth.signOut();
-        throw new Error("Admin record not found.");
-      }
-
-      const adminData = adminDoc.data();
-
-      if (
-        adminData.role !== "superAdmin" ||
-        adminData.status !== "active"
-      ) {
-        await auth.signOut();
-        throw new Error("Admin access not authorized.");
-      }
-
-      currentUser = user;
-      isAdmin = true;
-
-      $("adminError").textContent = "";
-
-      go("admin");
-      msg("Welcome, Super Admin!");
-
-    } catch (error) {
-      $("adminError").textContent =
-        error.code === "auth/invalid-credential"
-          ? "Incorrect email or password."
-          : error.message;
-
-      console.error("Admin login:", error);
-    }
-  };
+// Student accounts use this email format in Firebase Authentication.
+// Example: roll number 25 becomes 25@students.msd-school.app
+function studentLoginEmail(rollNumber) {
+  return cleanRollNumber(rollNumber).toLowerCase()
+    + "@students.msd-school.app";
 }
 
-// 7. ADMIN SESSION CHECK
+// Student Login
+$("studentLoginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-auth.onAuthStateChanged(async user => {
-  currentUser = user;
+  const roll = cleanRollNumber($("rollNumber").value);
+  const password = $("studentPassword").value;
 
-  if (!user) {
-    isAdmin = false;
-    return;
-  }
+  showMessage("message", "Logging in...");
 
   try {
-    const doc = await db.collection("admins").doc(user.uid).get();
+    const credential = await auth.signInWithEmailAndPassword(
+      studentLoginEmail(roll),
+      password
+    );
 
-    if (
-      doc.exists &&
-      doc.data().role === "superAdmin" &&
-      doc.data().status === "active"
-    ) {
-      isAdmin = true;
-    } else {
-      isAdmin = false;
+    const userDoc = await db.collection("students")
+      .doc(credential.user.uid).get();
+
+    if (!userDoc.exists) {
       await auth.signOut();
-    }
-  } catch (error) {
-    isAdmin = false;
-    console.error("Admin verification failed:", error);
-  }
-});
-
-// 8. ADMIN LOGOUT
-
-async function adminLogout() {
-  try {
-    await auth.signOut();
-
-    currentUser = null;
-    isAdmin = false;
-
-    go("home");
-    msg("Admin logged out");
-
-  } catch (error) {
-    msg("Logout failed");
-    console.error(error);
-  }
-}
-
-// 9. STUDENT LOGIN
-// Student accounts will be enabled after
-// Admin creates real student accounts.
-
-if ($("loginForm")) {
-  $("loginForm").onsubmit = event => {
-    event.preventDefault();
-
-    $("loginError").textContent =
-      "Student accounts are not created yet. Please contact the school administration.";
-  };
-}
-
-// 10. STUDENT DASHBOARD
-
-function renderDashboard() {
-  if (!currentUser || !isAdmin) {
-    go("home");
-    return;
-  }
-
-  if ($("greeting")) {
-    $("greeting").textContent = "School Administration";
-  }
-
-  if ($("pname")) {
-    $("pname").textContent = "M.S.D. ENGLISH ACADEMY";
-  }
-
-  if ($("proll")) {
-    $("proll").textContent = "Administrator";
-  }
-
-  if ($("pclass")) {
-    $("pclass").textContent = "Super Admin";
-  }
-
-  if ($("attendance")) {
-    $("attendance").textContent = "N/A";
-  }
-}
-
-// 11. LOAD SCHOOL NOTICES
-
-async function renderNotices() {
-  const list = $("noticeList");
-  const latest = $("latest");
-
-  if (!list) return;
-
-  list.innerHTML = '<p>Loading school notices...</p>';
-
-  try {
-    const snapshot = await db
-      .collection("notices")
-      .orderBy("createdAt", "desc")
-      .limit(50)
-      .get();
-
-    notices = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    if (latest) {
-      latest.textContent = notices[0]?.title ||
-        "Welcome to M.S.D. English Academy";
-    }
-
-    list.innerHTML = notices.length
-      ? notices.map(notice => `
-        <article class="notice">
-          <small>${esc(notice.category)} ·
-          ${esc(notice.date || "")}</small>
-          <h3>${esc(notice.title)}</h3>
-          <p>${esc(notice.details)}</p>
-        </article>
-      `).join("")
-      : '<div class="empty">No school notices published yet.</div>';
-
-  } catch (error) {
-    list.innerHTML =
-      '<div class="empty">Unable to load notices. Please try again.</div>';
-
-    console.error("Notice loading:", error);
-  }
-}
-
-// 12. PUBLISH NOTICE
-
-if ($("noticeForm")) {
-  $("noticeForm").onsubmit = async event => {
-    event.preventDefault();
-
-    if (!isAdmin || !currentUser) {
-      msg("Admin login required");
+      showMessage("message", "Student profile not found. Contact school administration.");
       return;
     }
 
-    const data = Object.fromEntries(
-      new FormData(event.target).entries()
-    );
+    const profile = userDoc.data();
 
-    try {
-      await db.collection("notices").add({
-        title: data.title.trim(),
-        category: data.category,
-        details: data.details.trim(),
-        date: new Date().toLocaleDateString("en-IN"),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdBy: currentUser.uid
-      });
-
-      event.target.reset();
-
-      await renderNotices();
-
-      msg("School notice published successfully");
-
-    } catch (error) {
-      msg("Notice could not be published");
-      console.error("Notice publishing:", error);
+    if (
+      profile.status !== "active" ||
+      profile.role !== "student" ||
+      cleanRollNumber(profile.rollNumber || "") !== roll
+    ) {
+      await auth.signOut();
+      showMessage("message", "This student account is not active or is not valid.");
+      return;
     }
-  };
-}
 
-// 13. ONLINE ADMISSION ENQUIRY
+    currentUser = credential.user;
+    currentRole = "student";
+    studentProfile = profile;
 
-if ($("admissionForm")) {
-  $("admissionForm").onsubmit = async event => {
-    event.preventDefault();
+    openStudentDashboard();
 
-    const data = Object.fromEntries(
-      new FormData(event.target).entries()
-    );
+  } catch (error) {
+    console.error(error);
+    showMessage("message", "Login failed. Check your Roll Number and Password.");
+  }
+});
 
-    try {
-      await db.collection("admissions").add({
-        student: data.student.trim(),
-        className: data.className,
-        guardian: data.guardian.trim(),
-        contact: data.contact.trim(),
-        message: data.message.trim(),
-        status: "pending",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+// Super Admin Login
+$("adminLoginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-      event.target.reset();
+  const email = $("adminEmail").value.trim();
+  const password = $("adminPassword").value;
 
-      $("admissionMsg").textContent =
-        "Your admission enquiry has been submitted successfully.";
+  showMessage("adminMessage", "Checking admin account...");
 
-      msg("Admission enquiry submitted");
+  try {
+    const credential = await auth.signInWithEmailAndPassword(email, password);
+    const adminDoc = await db.collection("admins")
+      .doc(credential.user.uid).get();
 
-    } catch (error) {
-      $("admissionMsg").textContent =
-        "Unable to submit enquiry. Please try again.";
-
-      console.error("Admission:", error);
+    if (
+      !adminDoc.exists ||
+      adminDoc.data().role !== "superAdmin" ||
+      adminDoc.data().status !== "active"
+    ) {
+      await auth.signOut();
+      showMessage("adminMessage", "This account is not an active Super Admin.");
+      return;
     }
-  };
+
+    currentUser = credential.user;
+    currentRole = "superAdmin";
+    showScreen("adminDashboard");
+    loadNotices("adminNotices");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("adminMessage", "Admin login failed. Check email and password.");
+  }
+});
+
+// Switch login screens
+$("showAdminLogin").addEventListener("click", () => {
+  showMessage("adminMessage", "");
+  showScreen("adminLoginPage");
+});
+
+$("backToStudentLogin").addEventListener("click", () => {
+  showMessage("message", "");
+  showScreen("loginPage");
+});
+
+// Open student dashboard
+function openStudentDashboard() {
+  const name = studentProfile.fullName || "Student";
+  const roll = studentProfile.rollNumber || "";
+  const classId = studentProfile.classId || "";
+
+  $("studentName").textContent = name;
+  $("studentInfo").textContent =
+    "Roll Number: " + roll + " | Class: " + classId;
+
+  showScreen("studentDashboard");
+
+  loadHomework(classId);
+  loadNotices("studentNotices");
 }
 
-// 14. STUDENT DIRECTORY
+// Load homework for the logged-in student's class only
+async function loadHomework(classId) {
+  const container = $("homeworkList");
+  container.textContent = "Loading homework...";
 
-function renderStudents() {
-  const results = $("studentResults");
-
-  if (results) {
-    results.innerHTML =
-      '<div class="empty">Student accounts will appear here after secure registration by Admin.</div>';
-  }
-
-  const adminList = $("adminStudents");
-
-  if (adminList) {
-    adminList.innerHTML =
-      '<div class="empty">No student accounts registered yet.</div>';
-  }
-}
-
-// 15. ADMIN PANEL
-
-async function renderAdmin() {
-  if (!isAdmin || !currentUser) return;
-
-  renderStudents();
-
-  const enquiryList = $("enquiryList");
-
-  if (enquiryList) {
-    enquiryList.innerHTML = "<p>Loading admission enquiries...</p>";
-
-    try {
-      const snapshot = await db
-        .collection("admissions")
-        .orderBy("createdAt", "desc")
-        .limit(100)
-        .get();
-
-      enquiryList.innerHTML = snapshot.empty
-        ? '<div class="empty">No admission enquiries yet.</div>'
-        : snapshot.docs.map(doc => {
-            const item = doc.data();
-
-            return `
-              <div class="record">
-                <div>
-                  <strong>${esc(item.student)} · ${esc(item.className)}</strong>
-                  <small>Guardian: ${esc(item.guardian)}</small>
-                  <small>Contact: ${esc(item.contact)}</small>
-                  <small>Status: ${esc(item.status)}</small>
-                  ${item.message
-                    ? `<p>${esc(item.message)}</p>`
-                    : ""}
-                </div>
-              </div>
-            `;
-          }).join("");
-
-    } catch (error) {
-      enquiryList.innerHTML =
-        '<div class="empty">Unable to load admission enquiries.</div>';
-
-      console.error("Admission loading:", error);
-    }
-  }
-}
-
-// 16. LOGOUT
-
-function logout() {
-  if (isAdmin) {
-    adminLogout();
+  if (!classId) {
+    container.textContent = "Your class has not been assigned. Contact school administration.";
     return;
   }
 
-  go("home");
+  try {
+    const snapshot = await db.collection("homework")
+      .where("classId", "==", classId)
+      .get();
+
+    if (snapshot.empty) {
+      container.textContent = "No homework or classwork has been published yet.";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const item = document.createElement("div");
+      item.className = "item";
+
+      const title = document.createElement("h4");
+      title.textContent = data.title || "Homework";
+
+      const subject = document.createElement("p");
+      subject.textContent = "Subject: " + (data.subject || "Not specified");
+
+      const details = document.createElement("p");
+      details.textContent = data.details || "";
+
+      const type = document.createElement("small");
+      type.textContent = data.type || "Homework";
+
+      item.append(title, subject, details, type);
+      container.appendChild(item);
+    });
+
+  } catch (error) {
+    console.error(error);
+    container.textContent = "Could not load homework. Please try again.";
+  }
 }
 
-function switchAccount() {
-  go("login");
+// Load notices
+async function loadNotices(containerId) {
+  const container = $(containerId);
+  container.textContent = "Loading notices...";
+
+  try {
+    const snapshot = await db.collection("notices")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    if (snapshot.empty) {
+      container.textContent = "No notices available.";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const item = document.createElement("div");
+      item.className = "item";
+
+      const title = document.createElement("h4");
+      title.textContent = data.title || "School Notice";
+
+      const details = document.createElement("p");
+      details.textContent = data.details || "";
+
+      item.append(title, details);
+      container.appendChild(item);
+    });
+
+  } catch (error) {
+    console.error(error);
+    container.textContent = "Could not load notices.";
+  }
 }
 
-// 17. INITIAL SCREEN
+// Super Admin publishes a notice
+$("noticeForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-renderStudents();
+  if (!currentUser || currentRole !== "superAdmin") {
+    showMessage("noticeMessage", "Only Super Admin can publish notices.");
+    return;
+  }
 
-renderNotices();
+  const title = $("noticeTitle").value.trim();
+  const details = $("noticeDetails").value.trim();
 
-console.log(
-  "M.S.D. English Academy School App initialized."
-);
+  if (!title || !details) return;
+
+  try {
+    await db.collection("notices").add({
+      title,
+      details,
+      createdBy: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    $("noticeForm").reset();
+    showMessage("noticeMessage", "Notice published successfully.", true);
+    loadNotices("adminNotices");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("noticeMessage", "Notice could not be published.");
+  }
+});
+
+// Student Logout
+$("studentLogout").addEventListener("click", async () => {
+  await auth.signOut();
+  currentUser = null;
+  currentRole = null;
+  studentProfile = null;
+  $("studentLoginForm").reset();
+  showScreen("loginPage");
+});
+
+// Admin Logout
+$("adminLogout").addEventListener("click", async () => {
+  await auth.signOut();
+  currentUser = null;
+  currentRole = null;
+  showScreen("loginPage");
+});
+
+// Restore session safely when app opens
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    currentUser = null;
+    currentRole = null;
+    studentProfile = null;
+    showScreen("loginPage");
+    return;
+  }
+
+  try {
+    const adminDoc = await db.collection("admins").doc(user.uid).get();
+
+    if (
+      adminDoc.exists &&
+      adminDoc.data().role === "superAdmin" &&
+      adminDoc.data().status === "active"
+    ) {
+      currentUser = user;
+      currentRole = "superAdmin";
+      showScreen("adminDashboard");
+      loadNotices("adminNotices");
+      return;
+    }
+
+    const studentDoc = await db.collection("students").doc(user.uid).get();
+
+    if (
+      studentDoc.exists &&
+      studentDoc.data().role === "student" &&
+      studentDoc.data().status === "active"
+    ) {
+      currentUser = user;
+      currentRole = "student";
+      studentProfile = studentDoc.data();
+      openStudentDashboard();
+      return;
+    }
+
+    await auth.signOut();
+    showScreen("loginPage");
+
+  } catch (error) {
+    console.error(error);
+    await auth.signOut();
+    showScreen("loginPage");
+  }
+});
