@@ -1,488 +1,167 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#12345b">
-<meta name="description" content="Mata Santi Devi English Academy Student Portal">
-<link rel="manifest" href="manifest.json">
-<title>M.S.D. English Academy | Student App</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123b72">
+  <link rel="manifest" href="manifest.json">
+  <title>M.S.D. English Academy | School App</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: #f1f5fb; color: #17243a;
+    }
+    header {
+      background: #123b72; color: white; padding: 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    header img {
+      width: 52px; height: 52px; object-fit: contain;
+      background: white; border-radius: 12px;
+    }
+    header h2 { margin: 0; font-size: 19px; }
+    header small { display: block; margin-top: 5px; }
+    main { max-width: 650px; margin: 25px auto; padding: 15px; }
+    .card {
+      background: white; padding: 22px; border-radius: 16px;
+      box-shadow: 0 4px 18px #102c5012; margin-bottom: 18px;
+    }
+    h2, h3 { color: #123b72; }
+    input, textarea, button {
+      width: 100%; padding: 13px; margin: 8px 0;
+      border-radius: 9px; font-size: 16px;
+    }
+    input, textarea {
+      border: 1px solid #ccd5e2; background: #fff;
+    }
+    button {
+      border: 0; background: #123b72; color: white;
+      font-weight: bold; cursor: pointer;
+    }
+    button.secondary { background: #e8eef7; color: #123b72; }
+    .hidden { display: none !important; }
+    .muted { color: #64748b; font-size: 14px; line-height: 1.5; }
+    .item {
+      border: 1px solid #e0e7f0; padding: 13px;
+      border-radius: 10px; margin: 10px 0;
+    }
+    .item h4 { margin: 0 0 7px; color: #123b72; }
+    #message { padding: 10px 0; color: #b42318; }
+    .success { color: #187443 !important; }
+    footer { text-align: center; padding: 20px; color: #64748b; }
+  </style>
 </head>
-
 <body>
-<div class="app">
 
 <header>
-  <div class="logo">
-    <img src="icon-192-1.png" alt="M.S.D. School Logo">
-  </div>
+  <img src="icon-192-1.png" alt="School Logo">
   <div>
-    <h1>M.S.D. ENGLISH ACADEMY</h1>
-    <small>MATA SANTI DEVI ENGLISH ACADEMY</small>
+    <h2>M.S.D. ENGLISH ACADEMY</h2>
+    <small>Mata Santi Devi English Academy</small>
   </div>
-  <button onclick="go('home')">⌂</button>
 </header>
 
 <main>
-
-<!-- HOME -->
-<section id="home" class="screen active">
-
-<div class="hero">
-  <small>WELCOME TO</small>
-  <h2>M.S.D. ENGLISH ACADEMY</h2>
-  <p>Education, Discipline and Excellence</p>
-  <p>Khushnampur Dariyapur, Nevada, Azamgarh, Uttar Pradesh</p>
-  <button class="gold" onclick="go('login')">Student Login</button>
-  <button class="outline" onclick="go('admission')">Online Admission</button>
-</div>
-
-<div class="ticker" id="latest">
-Welcome to M.S.D. English Academy!
-</div>
-
-<h3>Student Portal</h3>
-
-<div class="grid">
-
-<button class="tile" onclick="go('login')">
-🎓<b>Student Login</b>
-<small>Open Dashboard</small>
-</button>
-
-<button class="tile" onclick="go('attendance')">
-📅<b>Attendance</b>
-<small>Attendance Record</small>
-</button>
-
-<button class="tile" onclick="go('homework')">
-📚<b>Homework</b>
-<small>Classwork & Homework</small>
-</button>
-
-<button class="tile" onclick="go('timetable')">
-🕒<b>Timetable</b>
-<small>Class Schedule</small>
-</button>
-
-<button class="tile" onclick="go('results')">
-🏆<b>Exam Results</b>
-<small>Marks & Performance</small>
-</button>
-
-<button class="tile" onclick="go('fees')">
-💳<b>School Fees</b>
-<small>Fee Details</small>
-</button>
-
-<button class="tile" onclick="go('materials')">
-📖<b>Study Material</b>
-<small>Books & Notes</small>
-</button>
-
-<button class="tile" onclick="go('bus')">
-🚌<b>Bus Tracking</b>
-<small>School Transport</small>
-</button>
-
-<button class="tile" onclick="go('notices')">
-📢<b>School Notices</b>
-<small>Updates & Holidays</small>
-</button>
-
-<button class="tile" onclick="go('profile')">
-👤<b>My Profile</b>
-<small>Student Information</small>
-</button>
-
-</div>
-
-<div class="panel">
-<h3>About Our School</h3>
-<p>Mata Santi Devi English Academy is committed to providing quality education, discipline and overall development of students.</p>
-</div>
-
-<div class="panel">
-<h3>School Location</h3>
-<p>Khushnampur Dariyapur, Nevada, Azamgarh, Uttar Pradesh.</p>
-</div>
-
-<button class="primary wide" onclick="go('login')">
-Student Login →
-</button>
-
-<button class="link" onclick="go('admission')">
-New Admission Enquiry →
-</button>
-
-</section>
-
-<!-- STUDENT LOGIN -->
-<section id="login" class="screen">
-
-<button class="back" onclick="go('home')">← Home</button>
-
-<h2>Student Login</h2>
-
-<p class="muted">
-Login using your school-issued credentials.
-</p>
-
-<form id="loginForm" class="panel stack">
-
-<label>Roll Number
-<input id="roll" required placeholder="Enter your Roll Number">
-</label>
-
-<label>Password
-<input id="pass" type="password" required placeholder="Enter Password">
-</label>
-
-<button class="primary">Login to Student App</button>
-
-<p id="loginError" class="error"></p>
-
-</form>
-
-</section>
-
-<!-- STUDENT DASHBOARD -->
-<section id="dashboard" class="screen">
-
-<h2 id="greeting">Student Dashboard</h2>
-
-<div class="panel">
-<small>STUDENT PROFILE</small>
-<h3 id="pname">Student Name</h3>
-
-<div class="details">
-<div>Roll Number<br><b id="proll">-</b></div>
-<div>Class<br><b id="pclass">-</b></div>
-<div>Session<br><b>2026–27</b></div>
-<div>Attendance<br><b id="attendance">-</b></div>
-</div>
-
-</div>
-
-<h3>My Learning</h3>
-
-<div class="grid">
-
-<button class="tile" onclick="go('attendance')">
-📅<b>Attendance</b>
-</button>
-
-<button class="tile" onclick="go('homework')">
-📚<b>Homework</b>
-</button>
-
-<button class="tile" onclick="go('timetable')">
-🕒<b>Timetable</b>
-</button>
-
-<button class="tile" onclick="go('results')">
-🏆<b>Results</b>
-</button>
-
-<button class="tile" onclick="go('fees')">
-💳<b>Fees</b>
-</button>
-
-<button class="tile" onclick="go('materials')">
-📖<b>Study Material</b>
-</button>
-
-<button class="tile" onclick="go('notices')">
-📢<b>Notices</b>
-</button>
-
-<button class="tile" onclick="go('bus')">
-🚌<b>Bus Tracking</b>
-</button>
-
-</div>
-
-<div class="panel" id="dashNotice">
-<h3>Latest School Notice</h3>
-<p>School updates will appear here.</p>
-</div>
-
-<button class="secondary wide" onclick="switchAccount()">
-Switch Student Account
-</button>
-
-<button class="secondary wide" onclick="logout()">
-Log Out
-</button>
-
-</section>
-
-<!-- MY PROFILE -->
-<section id="profile" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>My Profile</h2>
-
-<div class="panel">
-<h3>Student Information</h3>
-<div id="profileDetails">
-<p class="muted">Please login to view your profile.</p>
-</div>
-</div>
-
-</section>
-
-<!-- ATTENDANCE -->
-<section id="attendance" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>My Attendance</h2>
-
-<div class="panel">
-<h3>Attendance Summary</h3>
-<div id="attendanceDetails">
-<p class="muted">Login to view your attendance.</p>
-</div>
-</div>
-
-<div class="panel">
-<h3>Attendance History</h3>
-<div id="attendanceHistory" class="list">
-<div class="empty">Attendance records will appear here.</div>
-</div>
-</div>
-
-</section>
-
-<!-- HOMEWORK -->
-<section id="homework" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>Homework & Classwork</h2>
-
-<div class="panel">
-<h3>My Homework</h3>
-<div id="homeworkList" class="list">
-<div class="empty">Login to view assigned homework.</div>
-</div>
-</div>
-
-<div class="panel">
-<h3>Classwork</h3>
-<div id="classworkList" class="list">
-<div class="empty">Classwork will appear here.</div>
-</div>
-</div>
-
-</section>
-
-<!-- TIMETABLE -->
-<section id="timetable" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>Class Timetable</h2>
-
-<div class="panel">
-<h3>My Daily Schedule</h3>
-<div id="timetableList" class="list">
-<div class="empty">Login to view your class timetable.</div>
-</div>
-</div>
-
-</section>
-
-<!-- RESULTS -->
-<section id="results" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>Exam & Results</h2>
-
-<div class="panel">
-<h3>My Examination Results</h3>
-<div id="resultsList" class="list">
-<div class="empty">Your examination results will appear here.</div>
-</div>
-</div>
-
-</section>
-
-<!-- FEES -->
-<section id="fees" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>Fees Management</h2>
-
-<div class="panel">
-<h3>My Fee Details</h3>
-<div id="feeDetails">
-<p class="muted">Login to view your fee details.</p>
-</div>
-</div>
-
-<div class="panel">
-<h3>Payment History</h3>
-<div id="feeHistory" class="list">
-<div class="empty">Fee history will appear here.</div>
-</div>
-</div>
-
-</section>
-
-<!-- STUDY MATERIAL -->
-<section id="materials" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>Online Study Material</h2>
-
-<div class="panel">
-<h3>My Learning Resources</h3>
-<div id="materialList" class="list">
-<div class="empty">Study materials will appear here.</div>
-</div>
-</div>
-
-</section>
-
-<!-- BUS TRACKING -->
-<section id="bus" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>School Bus Tracking</h2>
-
-<div class="panel stack">
-<h3>Find Your School Bus</h3>
-
-<label>Bus / Van Number
-<input id="busNumber" placeholder="Enter Bus Number">
-</label>
-
-<button class="primary" onclick="searchBus()">
-Search Bus
-</button>
-
-<div id="busDetails">
-<div class="empty">Enter your school bus number to check its information.</div>
-</div>
-
-</div>
-
-</section>
-
-<!-- NOTICES -->
-<section id="notices" class="screen">
-
-<button class="back" onclick="go('dashboard')">← Dashboard</button>
-
-<h2>Notices & Holidays</h2>
-
-<div id="noticeList" class="list">
-<div class="empty">Loading school notices...</div>
-</div>
-
-</section>
-
-<!-- ADMISSION -->
-<section id="admission" class="screen">
-
-<button class="back" onclick="go('home')">← Home</button>
-
-<h2>Online Admission Enquiry</h2>
-
-<form id="admissionForm" class="panel stack">
-
-<label>Student Full Name
-<input name="student" required>
-</label>
-
-<label>Class Applying For
-<select name="className" required>
-<option value="">Choose Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>Class 1</option>
-<option>Class 2</option>
-<option>Class 3</option>
-<option>Class 4</option>
-<option>Class 5</option>
-<option>Class 6</option>
-<option>Class 7</option>
-<option>Class 8</option>
-<option>Class 9</option>
-<option>Class 10</option>
-<option>Class 11</option>
-<option>Class 12</option>
-</select>
-</label>
-
-<label>Parent / Guardian Name
-<input name="guardian" required>
-</label>
-
-<label>Contact Number
-<input name="contact" required inputmode="tel" maxlength="16">
-</label>
-
-<label>Message
-<textarea name="message" rows="3"></textarea>
-</label>
-
-<button class="primary">Submit Admission Enquiry</button>
-
-<p id="admissionMsg" class="success"></p>
-
-</form>
-
-</section>
-
+  <section id="loginPage" class="card">
+    <h2>Student Login</h2>
+    <p class="muted">Login using your school Roll Number and Password.</p>
+
+    <form id="studentLoginForm">
+      <input id="rollNumber" type="text" placeholder="Enter Roll Number"
+        autocomplete="username" required>
+      <input id="studentPassword" type="password" placeholder="Enter Password"
+        autocomplete="current-password" required>
+      <button type="submit">Student Login</button>
+    </form>
+
+    <button id="showAdminLogin" class="secondary" type="button">
+      Super Admin Login
+    </button>
+
+    <p id="message" role="status"></p>
+    <p class="muted">
+      Student accounts are created only by the School Super Admin.
+      Contact school administration if you do not have login details.
+    </p>
+  </section>
+
+  <section id="adminLoginPage" class="card hidden">
+    <h2>Super Admin Login</h2>
+    <form id="adminLoginForm">
+      <input id="adminEmail" type="email" placeholder="Admin Email"
+        autocomplete="username" required>
+      <input id="adminPassword" type="password" placeholder="Admin Password"
+        autocomplete="current-password" required>
+      <button type="submit">Login as Super Admin</button>
+    </form>
+    <button id="backToStudentLogin" class="secondary" type="button">
+      Back to Student Login
+    </button>
+    <p id="adminMessage" role="status"></p>
+  </section>
+
+  <section id="studentDashboard" class="hidden">
+    <div class="card">
+      <h2>Student Dashboard</h2>
+      <h3 id="studentName">Student</h3>
+      <p id="studentInfo" class="muted"></p>
+      <button id="studentLogout" type="button">Logout</button>
+    </div>
+
+    <div class="card">
+      <h3>My Homework & Classwork</h3>
+      <div id="homeworkList">Loading homework...</div>
+    </div>
+
+    <div class="card">
+      <h3>School Notices</h3>
+      <div id="studentNotices">Loading notices...</div>
+    </div>
+  </section>
+
+  <section id="adminDashboard" class="hidden">
+    <div class="card">
+      <h2>Super Admin Panel</h2>
+      <p class="muted">M.S.D. English Academy</p>
+      <button id="adminLogout" type="button">Logout</button>
+    </div>
+
+    <div class="card">
+      <h3>Publish School Notice</h3>
+      <form id="noticeForm">
+        <input id="noticeTitle" placeholder="Notice Title" required>
+        <textarea id="noticeDetails" rows="4"
+          placeholder="Notice Details" required></textarea>
+        <button type="submit">Publish Notice</button>
+      </form>
+      <p id="noticeMessage" role="status"></p>
+    </div>
+
+    <div class="card">
+      <h3>Recent Notices</h3>
+      <div id="adminNotices">Loading notices...</div>
+    </div>
+
+    <div class="card">
+      <h3>Student Accounts</h3>
+      <p class="muted">
+        Student profile creation and account provisioning will be added
+        in the next step using a secure backend. Do not create student
+        accounts by putting passwords in this page.
+      </p>
+    </div>
+  </section>
 </main>
 
-<!-- BOTTOM NAVIGATION -->
-<nav>
-
-<button onclick="go('home')">
-⌂<small>Home</small>
-</button>
-
-<button onclick="go('dashboard')">
-▦<small>Dashboard</small>
-</button>
-
-<button onclick="go('notices')">
-▤<small>Notices</small>
-</button>
-
-<button onclick="go('profile')">
-♙<small>Profile</small>
-</button>
-
-</nav>
-
 <footer>
-M.S.D. ENGLISH ACADEMY
-<span>Student Portal · 2026–27</span>
+  M.S.D. English Academy · Khushnampur Dariyapur, Newada, Azamgarh
 </footer>
 
-</div>
-
-<div id="toast" class="toast"></div>
-
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script src="app.js"></script>
-
 </body>
 </html>
