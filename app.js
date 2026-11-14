@@ -194,7 +194,11 @@ $("adminLoginForm").addEventListener("submit", async event => {
     }
 
     const adminData = adminDoc.data();
-
+    showMessage(
+  "adminMessage",
+  "Debug: role = [" + adminData.role +
+  "], status = [" + adminData.status + "]"
+);
     if (adminData.role !== "superAdmin") {
       await auth.signOut();
 
