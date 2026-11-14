@@ -1,5 +1,5 @@
-
 // M.S.D. ENGLISH ACADEMY - SCHOOL APP
+// Updated Login System with Error Diagnostics
 
 const firebaseConfig = {
   apiKey: "AIzaSyDUbpRqEsJpPWiug7HnQMMcfAP6MsQKnCk",
@@ -18,26 +18,45 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 let currentUser = null;
 let currentRole = null;
 let studentProfile = null;
+let loginInProgress = false;
 
-// Show one screen at a time
+// Timeout helper
+function withTimeout(promise, seconds, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), seconds * 1000);
+    })
+  ]);
+}
+
+// Screen management
 function showScreen(screenId) {
   [
     "loginPage",
     "adminLoginPage",
     "studentDashboard",
     "adminDashboard"
-  ].forEach(id => $(id).classList.add("hidden"));
+  ].forEach(id => {
+    const element = $(id);
+    if (element) element.classList.add("hidden");
+  });
 
-  $(screenId).classList.remove("hidden");
+  if ($(screenId)) {
+    $(screenId).classList.remove("hidden");
+  }
 }
 
+// Message management
 function showMessage(id, message, success = false) {
   const element = $(id);
+  if (!element) return;
+
   element.textContent = message;
   element.className = success ? "success" : "";
 }
@@ -46,30 +65,45 @@ function cleanRollNumber(value) {
   return value.trim().toUpperCase().replace(/\s+/g, "");
 }
 
-// Student accounts use this email format in Firebase Authentication.
-// Example: roll number 25 becomes 25@students.msd-school.app
 function studentLoginEmail(rollNumber) {
   return cleanRollNumber(rollNumber).toLowerCase()
     + "@students.msd-school.app";
 }
 
-// Student Login
-$("studentLoginForm").addEventListener("submit", async (event) => {
+// =====================================
+// STUDENT LOGIN
+// =====================================
+
+$("studentLoginForm").addEventListener("submit", async event => {
   event.preventDefault();
+
+  if (loginInProgress) return;
+  loginInProgress = true;
 
   const roll = cleanRollNumber($("rollNumber").value);
   const password = $("studentPassword").value;
+  const button = $("studentLoginForm").querySelector("button[type='submit']");
 
-  showMessage("message", "Logging in...");
+  button.disabled = true;
+  showMessage("message", "Connecting to Firebase Authentication...");
 
   try {
-    const credential = await auth.signInWithEmailAndPassword(
-      studentLoginEmail(roll),
-      password
+    const credential = await withTimeout(
+      auth.signInWithEmailAndPassword(
+        studentLoginEmail(roll),
+        password
+      ),
+      20,
+      "Authentication timed out. Check your internet connection."
     );
 
-    const userDoc = await db.collection("students")
-      .doc(credential.user.uid).get();
+    showMessage("message", "Checking student profile...");
+
+    const userDoc = await withTimeout(
+      db.collection("students").doc(credential.user.uid).get(),
+      15,
+      "Student profile request timed out."
+    );
 
     if (!userDoc.exists) {
       await auth.signOut();
@@ -85,7 +119,7 @@ $("studentLoginForm").addEventListener("submit", async (event) => {
       cleanRollNumber(profile.rollNumber || "") !== roll
     ) {
       await auth.signOut();
-      showMessage("message", "This student account is not active or is not valid.");
+      showMessage("message", "Student account is inactive or profile details do not match.");
       return;
     }
 
@@ -93,42 +127,69 @@ $("studentLoginForm").addEventListener("submit", async (event) => {
     currentRole = "student";
     studentProfile = profile;
 
+    showMessage("message", "Student login successful!", true);
     openStudentDashboard();
 
   } catch (error) {
-    console.error(error);
-    showMessage("message", "Login failed. Check your Roll Number and Password.");
+    console.error("STUDENT LOGIN ERROR:", error);
+
+    showMessage(
+      "message",
+      "Error: " + (error.code || "unknown") + " - " + error.message
+    );
+
+  } finally {
+    loginInProgress = false;
+    button.disabled = false;
   }
 });
 
+// =====================================
+// SUPER ADMIN LOGIN
+// =====================================
 
-// Super Admin Login - Diagnostic Version
-$("adminLoginForm").addEventListener("submit", async (event) => {
+$("adminLoginForm").addEventListener("submit", async event => {
   event.preventDefault();
+
+  if (loginInProgress) return;
+  loginInProgress = true;
 
   const email = $("adminEmail").value.trim();
   const password = $("adminPassword").value;
-
   const button = $("adminLoginForm").querySelector("button[type='submit']");
+
   button.disabled = true;
 
   try {
-    showMessage("adminMessage", "Step 1: Connecting to Firebase Authentication...");
+    showMessage(
+      "adminMessage",
+      "Step 1: Connecting to Firebase Authentication..."
+    );
 
-    const credential = await auth.signInWithEmailAndPassword(email, password);
+    const credential = await withTimeout(
+      auth.signInWithEmailAndPassword(email, password),
+      20,
+      "Authentication timed out. Check internet and Firebase settings."
+    );
 
-    showMessage("adminMessage", "Step 2: Login successful. Checking Firestore Admin record...");
+    showMessage(
+      "adminMessage",
+      "Step 2: Authentication successful. Checking Admin record..."
+    );
 
-    const adminDoc = await Promise.race([
+    const adminDoc = await withTimeout(
       db.collection("admins").doc(credential.user.uid).get(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firestore request timed out after 12 seconds")), 12000)
-      )
-    ]);
+      15,
+      "Firestore request timed out. Check Firestore connection and Rules."
+    );
 
     if (!adminDoc.exists) {
       await auth.signOut();
-      showMessage("adminMessage", "Error: Admin document not found for this UID.");
+
+      showMessage(
+        "adminMessage",
+        "Error: Admin document not found for this UID."
+      );
       return;
     }
 
@@ -136,21 +197,30 @@ $("adminLoginForm").addEventListener("submit", async (event) => {
 
     if (adminData.role !== "superAdmin") {
       await auth.signOut();
-      showMessage("adminMessage", "Error: Admin role is incorrect.");
+
+      showMessage(
+        "adminMessage",
+        "Error: Admin role is incorrect."
+      );
       return;
     }
 
     if (adminData.status !== "active") {
       await auth.signOut();
-      showMessage("adminMessage", "Error: Admin status is not active.");
+
+      showMessage(
+        "adminMessage",
+        "Error: Admin status is not active."
+      );
       return;
     }
 
     currentUser = credential.user;
     currentRole = "superAdmin";
 
-    showMessage("adminMessage", "Login successful!", true);
     showScreen("adminDashboard");
+    showMessage("adminMessage", "Super Admin login successful!", true);
+
     loadNotices("adminNotices");
 
   } catch (error) {
@@ -158,15 +228,19 @@ $("adminLoginForm").addEventListener("submit", async (event) => {
 
     showMessage(
       "adminMessage",
-      "Error: " + (error.code || "unknown") + " — " + error.message
+      "Error: " + (error.code || "unknown") + " - " + error.message
     );
+
   } finally {
+    loginInProgress = false;
     button.disabled = false;
   }
 });
 
+// =====================================
+// LOGIN SCREEN NAVIGATION
+// =====================================
 
-// Switch login screens
 $("showAdminLogin").addEventListener("click", () => {
   showMessage("adminMessage", "");
   showScreen("adminLoginPage");
@@ -177,13 +251,19 @@ $("backToStudentLogin").addEventListener("click", () => {
   showScreen("loginPage");
 });
 
-// Open student dashboard
+// =====================================
+// STUDENT DASHBOARD
+// =====================================
+
 function openStudentDashboard() {
+  if (!studentProfile) return;
+
   const name = studentProfile.fullName || "Student";
   const roll = studentProfile.rollNumber || "";
   const classId = studentProfile.classId || "";
 
   $("studentName").textContent = name;
+
   $("studentInfo").textContent =
     "Roll Number: " + roll + " | Class: " + classId;
 
@@ -193,13 +273,18 @@ function openStudentDashboard() {
   loadNotices("studentNotices");
 }
 
-// Load homework for the logged-in student's class only
+// =====================================
+// LOAD HOMEWORK
+// =====================================
+
 async function loadHomework(classId) {
   const container = $("homeworkList");
+
   container.textContent = "Loading homework...";
 
   if (!classId) {
-    container.textContent = "Your class has not been assigned. Contact school administration.";
+    container.textContent =
+      "Your class has not been assigned. Contact school administration.";
     return;
   }
 
@@ -209,7 +294,7 @@ async function loadHomework(classId) {
       .get();
 
     if (snapshot.empty) {
-      container.textContent = "No homework or classwork has been published yet.";
+      container.textContent = "No homework or classwork available.";
       return;
     }
 
@@ -217,6 +302,7 @@ async function loadHomework(classId) {
 
     snapshot.forEach(doc => {
       const data = doc.data();
+
       const item = document.createElement("div");
       item.className = "item";
 
@@ -224,7 +310,8 @@ async function loadHomework(classId) {
       title.textContent = data.title || "Homework";
 
       const subject = document.createElement("p");
-      subject.textContent = "Subject: " + (data.subject || "Not specified");
+      subject.textContent =
+        "Subject: " + (data.subject || "Not specified");
 
       const details = document.createElement("p");
       details.textContent = data.details || "";
@@ -237,14 +324,19 @@ async function loadHomework(classId) {
     });
 
   } catch (error) {
-    console.error(error);
-    container.textContent = "Could not load homework. Please try again.";
+    console.error("HOMEWORK ERROR:", error);
+    container.textContent =
+      "Homework loading failed: " + error.message;
   }
 }
 
-// Load notices
+// =====================================
+// LOAD NOTICES
+// =====================================
+
 async function loadNotices(containerId) {
   const container = $(containerId);
+
   container.textContent = "Loading notices...";
 
   try {
@@ -261,6 +353,7 @@ async function loadNotices(containerId) {
 
     snapshot.forEach(doc => {
       const data = doc.data();
+
       const item = document.createElement("div");
       item.className = "item";
 
@@ -275,13 +368,16 @@ async function loadNotices(containerId) {
     });
 
   } catch (error) {
-    console.error(error);
-    container.textContent = "Could not load notices.";
+    console.error("NOTICE ERROR:", error);
+    container.textContent = "Notice loading failed: " + error.message;
   }
 }
 
-// Super Admin publishes a notice
-$("noticeForm").addEventListener("submit", async (event) => {
+// =====================================
+// PUBLISH NOTICE
+// =====================================
+
+$("noticeForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!currentUser || currentRole !== "superAdmin") {
@@ -296,52 +392,75 @@ $("noticeForm").addEventListener("submit", async (event) => {
 
   try {
     await db.collection("notices").add({
-      title,
-      details,
+      title: title,
+      details: details,
       createdBy: currentUser.uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     $("noticeForm").reset();
-    showMessage("noticeMessage", "Notice published successfully.", true);
+
+    showMessage(
+      "noticeMessage",
+      "Notice published successfully.",
+      true
+    );
+
     loadNotices("adminNotices");
 
   } catch (error) {
-    console.error(error);
-    showMessage("noticeMessage", "Notice could not be published.");
+    console.error("PUBLISH NOTICE ERROR:", error);
+    showMessage("noticeMessage", "Notice error: " + error.message);
   }
 });
 
-// Student Logout
-$("studentLogout").addEventListener("click", async () => {
-  await auth.signOut();
-  currentUser = null;
-  currentRole = null;
-  studentProfile = null;
-  $("studentLoginForm").reset();
-  showScreen("loginPage");
-});
+// =====================================
+// LOGOUT
+// =====================================
 
-// Admin Logout
-$("adminLogout").addEventListener("click", async () => {
-  await auth.signOut();
-  currentUser = null;
-  currentRole = null;
-  showScreen("loginPage");
-});
+async function logoutUser() {
+  try {
+    await auth.signOut();
 
-// Restore session safely when app opens
-auth.onAuthStateChanged(async (user) => {
+    currentUser = null;
+    currentRole = null;
+    studentProfile = null;
+
+    $("studentLoginForm").reset();
+    $("adminLoginForm").reset();
+
+    showScreen("loginPage");
+
+  } catch (error) {
+    console.error("LOGOUT ERROR:", error);
+    alert("Logout failed: " + error.message);
+  }
+}
+
+$("studentLogout").addEventListener("click", logoutUser);
+$("adminLogout").addEventListener("click", logoutUser);
+
+// =====================================
+// RESTORE EXISTING LOGIN SESSION
+// =====================================
+
+auth.onAuthStateChanged(async user => {
+  // Do not run a second profile check while
+  // the Login button is already checking it.
+  if (loginInProgress) return;
+
   if (!user) {
     currentUser = null;
     currentRole = null;
     studentProfile = null;
+
     showScreen("loginPage");
     return;
   }
 
   try {
-    const adminDoc = await db.collection("admins").doc(user.uid).get();
+    const adminDoc = await db.collection("admins")
+      .doc(user.uid).get();
 
     if (
       adminDoc.exists &&
@@ -350,12 +469,14 @@ auth.onAuthStateChanged(async (user) => {
     ) {
       currentUser = user;
       currentRole = "superAdmin";
+
       showScreen("adminDashboard");
       loadNotices("adminNotices");
       return;
     }
 
-    const studentDoc = await db.collection("students").doc(user.uid).get();
+    const studentDoc = await db.collection("students")
+      .doc(user.uid).get();
 
     if (
       studentDoc.exists &&
@@ -365,6 +486,7 @@ auth.onAuthStateChanged(async (user) => {
       currentUser = user;
       currentRole = "student";
       studentProfile = studentDoc.data();
+
       openStudentDashboard();
       return;
     }
@@ -373,8 +495,19 @@ auth.onAuthStateChanged(async (user) => {
     showScreen("loginPage");
 
   } catch (error) {
-    console.error(error);
-    await auth.signOut();
+    console.error("SESSION RESTORE ERROR:", error);
+
+    currentUser = null;
+    currentRole = null;
+    studentProfile = null;
+
     showScreen("loginPage");
+    showMessage(
+      "message",
+      "Session error: " + (error.code || "") + " " + error.message
+    );
   }
 });
+
+console.log("M.S.D. English Academy App Loaded");
+
