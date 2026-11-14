@@ -194,11 +194,17 @@ $("adminLoginForm").addEventListener("submit", async event => {
     }
 
     const adminData = adminDoc.data();
-    showMessage(
+
+showMessage(
   "adminMessage",
-  "Debug: role = [" + adminData.role +
-  "], status = [" + adminData.status + "]"
+  "Firebase Data: " + JSON.stringify({
+    uid: credential.user.uid,
+    role: adminData.role,
+    status: adminData.status
+  })
 );
+
+return;
     if (adminData.role !== "superAdmin") {
       await auth.signOut();
 
