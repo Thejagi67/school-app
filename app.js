@@ -101,40 +101,70 @@ $("studentLoginForm").addEventListener("submit", async (event) => {
   }
 });
 
-// Super Admin Login
+
+// Super Admin Login - Diagnostic Version
 $("adminLoginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const email = $("adminEmail").value.trim();
   const password = $("adminPassword").value;
 
-  showMessage("adminMessage", "Checking admin account...");
+  const button = $("adminLoginForm").querySelector("button[type='submit']");
+  button.disabled = true;
 
   try {
-    const credential = await auth.signInWithEmailAndPassword(email, password);
-    const adminDoc = await db.collection("admins")
-      .doc(credential.user.uid).get();
+    showMessage("adminMessage", "Step 1: Connecting to Firebase Authentication...");
 
-    if (
-      !adminDoc.exists ||
-      adminDoc.data().role !== "superAdmin" ||
-      adminDoc.data().status !== "active"
-    ) {
+    const credential = await auth.signInWithEmailAndPassword(email, password);
+
+    showMessage("adminMessage", "Step 2: Login successful. Checking Firestore Admin record...");
+
+    const adminDoc = await Promise.race([
+      db.collection("admins").doc(credential.user.uid).get(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore request timed out after 12 seconds")), 12000)
+      )
+    ]);
+
+    if (!adminDoc.exists) {
       await auth.signOut();
-      showMessage("adminMessage", "This account is not an active Super Admin.");
+      showMessage("adminMessage", "Error: Admin document not found for this UID.");
+      return;
+    }
+
+    const adminData = adminDoc.data();
+
+    if (adminData.role !== "superAdmin") {
+      await auth.signOut();
+      showMessage("adminMessage", "Error: Admin role is incorrect.");
+      return;
+    }
+
+    if (adminData.status !== "active") {
+      await auth.signOut();
+      showMessage("adminMessage", "Error: Admin status is not active.");
       return;
     }
 
     currentUser = credential.user;
     currentRole = "superAdmin";
+
+    showMessage("adminMessage", "Login successful!", true);
     showScreen("adminDashboard");
     loadNotices("adminNotices");
 
   } catch (error) {
-    console.error(error);
-    showMessage("adminMessage", "Admin login failed. Check email and password.");
+    console.error("ADMIN LOGIN ERROR:", error);
+
+    showMessage(
+      "adminMessage",
+      "Error: " + (error.code || "unknown") + " — " + error.message
+    );
+  } finally {
+    button.disabled = false;
   }
 });
+
 
 // Switch login screens
 $("showAdminLogin").addEventListener("click", () => {
