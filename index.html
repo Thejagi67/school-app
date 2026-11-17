@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,24 +9,56 @@
   <title>M.S.D. English Academy | School App</title>
 
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+
+  <style>
+    .hidden,
+    [hidden] {
+      display: none !important;
+    }
+
+    .student-photo-preview {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+      margin: 12px 0;
+    }
+
+    .form-note {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
+<!-- SCHOOL HEADER -->
+
 <header class="school-header">
   <div class="school-brand">
-    <img src="icon-192-1.png" alt="School Logo" class="school-logo">
+
+    <img
+      src="icon-192-1.png"
+      alt="School Logo"
+      class="school-logo"
+    >
 
     <div>
       <h1>M.S.D. ENGLISH ACADEMY</h1>
       <p>MATA SANTI DEVI ENGLISH ACADEMY</p>
       <small>Khushnampur Dariyapur Nevada Azamgarh</small>
     </div>
+
   </div>
 </header>
 
@@ -41,7 +74,9 @@
     </div>
 
     <div class="form-card">
+
       <h2>Student Login</h2>
+
       <p class="form-subtitle">
         Login using your Roll Number and Password
       </p>
@@ -49,18 +84,22 @@
       <form id="studentLoginForm">
 
         <label for="rollNumber">Roll Number</label>
+
         <input
           type="text"
           id="rollNumber"
           placeholder="Enter your roll number"
+          autocomplete="username"
           required
         >
 
         <label for="studentPassword">Password</label>
+
         <input
           type="password"
           id="studentPassword"
           placeholder="Enter your password"
+          autocomplete="current-password"
           required
         >
 
@@ -73,6 +112,7 @@
       <p id="message" class="message" role="status"></p>
 
       <div class="login-footer">
+
         <p>Only registered students can login.</p>
 
         <button
@@ -82,7 +122,9 @@
         >
           Super Admin Login
         </button>
+
       </div>
+
     </div>
 
   </section>
@@ -92,7 +134,9 @@
   <section id="adminLoginPage" class="page" hidden>
 
     <div class="form-card">
+
       <h2>Super Admin Login</h2>
+
       <p class="form-subtitle">
         Authorized administrator only
       </p>
@@ -100,18 +144,22 @@
       <form id="adminLoginForm">
 
         <label for="adminEmail">Admin Email</label>
+
         <input
           type="email"
           id="adminEmail"
           placeholder="Enter admin email"
+          autocomplete="username"
           required
         >
 
         <label for="adminPassword">Password</label>
+
         <input
           type="password"
           id="adminPassword"
           placeholder="Enter admin password"
+          autocomplete="current-password"
           required
         >
 
@@ -130,6 +178,7 @@
       >
         Back to Student Login
       </button>
+
     </div>
 
   </section>
@@ -139,17 +188,24 @@
   <section id="studentDashboard" class="page" hidden>
 
     <div class="dashboard-heading">
+
       <div>
         <h2>Student Dashboard</h2>
         <p>Welcome to M.S.D. English Academy</p>
       </div>
 
-      <button id="studentLogout" class="logout-button" type="button">
+      <button
+        id="studentLogout"
+        class="logout-button"
+        type="button"
+      >
         Logout
       </button>
+
     </div>
 
     <div class="content-card">
+
       <h3>My Student Profile</h3>
 
       <img
@@ -163,23 +219,31 @@
       <div id="studentInfo"></div>
 
       <h4>Home Address</h4>
+
       <p id="studentHomeAddress">
         Address not available
       </p>
+
     </div>
 
     <div class="content-card">
+
       <h3>Homework & Classwork</h3>
+
       <div id="homeworkList">
         No homework available.
       </div>
+
     </div>
 
     <div class="content-card">
+
       <h3>School Notices</h3>
+
       <div id="studentNotices">
         No notices available.
       </div>
+
     </div>
 
   </section>
@@ -189,14 +253,20 @@
   <section id="adminDashboard" class="page" hidden>
 
     <div class="dashboard-heading">
+
       <div>
         <h2>Super Admin Dashboard</h2>
         <p>School Management Portal</p>
       </div>
 
-      <button id="adminLogout" class="logout-button" type="button">
+      <button
+        id="adminLogout"
+        class="logout-button"
+        type="button"
+      >
         Logout
       </button>
+
     </div>
 
     <!-- STUDENT REGISTRATION -->
@@ -206,21 +276,10 @@
       <h3>Register New Student</h3>
 
       <p class="form-subtitle">
-        Create a student profile in the school database.
+        Create a new student account and school profile.
       </p>
 
       <form id="studentProfileForm">
-
-        <label for="newStudentUID">
-          Student Firebase Authentication UID
-        </label>
-
-        <input
-          type="text"
-          id="newStudentUID"
-          placeholder="Enter existing student's Firebase UID"
-          required
-        >
 
         <label for="newStudentName">
           Student Full Name
@@ -240,7 +299,7 @@
         <input
           type="text"
           id="newStudentRoll"
-          placeholder="Enter roll number"
+          placeholder="Enter unique roll number"
           required
         >
 
@@ -248,10 +307,33 @@
           Class
         </label>
 
+        <select id="newStudentClass" required>
+          <option value="">Select Class</option>
+          <option value="Nursery">Nursery</option>
+          <option value="LKG">LKG</option>
+          <option value="UKG">UKG</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+          <option value="9">Class 9</option>
+          <option value="10">Class 10</option>
+          <option value="11">Class 11</option>
+          <option value="12">Class 12</option>
+        </select>
+
+        <label for="newStudentSection">
+          Section
+        </label>
+
         <input
           type="text"
-          id="newStudentClass"
-          placeholder="Example: 9A"
+          id="newStudentSection"
+          placeholder="Example: A"
           required
         >
 
@@ -262,7 +344,13 @@
         <input
           type="url"
           id="newStudentPhoto"
-          placeholder="Enter secure HTTPS photo URL"
+          placeholder="Enter HTTPS photo URL"
+        >
+
+        <img
+          id="studentPhotoPreview"
+          class="student-photo-preview"
+          alt="Photo Preview"
         >
 
         <label for="newStudentAddress">
@@ -276,8 +364,30 @@
           required
         ></textarea>
 
-        <button type="submit" class="primary-button">
-          Register Student
+        <label for="newStudentPassword">
+          Student Login Password
+        </label>
+
+        <input
+          type="password"
+          id="newStudentPassword"
+          placeholder="Create student password"
+          minlength="6"
+          autocomplete="new-password"
+          required
+        >
+
+        <p class="form-note">
+          Student will login using Roll Number and this password.
+          Minimum password length is 6 characters.
+        </p>
+
+        <button
+          type="submit"
+          class="primary-button"
+          id="createStudentButton"
+        >
+          Create Student Account
         </button>
 
       </form>
@@ -288,11 +398,17 @@
         role="status"
       ></p>
 
-      <p class="form-subtitle">
-        Note: The student's Firebase Authentication account
-        must already exist. This form creates only the Firestore
-        student profile.
-      </p>
+    </div>
+
+    <!-- STUDENT ACCOUNTS -->
+
+    <div class="content-card">
+
+      <h3>Student Accounts</h3>
+
+      <div id="studentAccountsList">
+        Student account list will appear here.
+      </div>
 
     </div>
 
@@ -304,7 +420,9 @@
 
       <form id="noticeForm">
 
-        <label for="noticeTitle">Notice Title</label>
+        <label for="noticeTitle">
+          Notice Title
+        </label>
 
         <input
           type="text"
@@ -313,7 +431,9 @@
           required
         >
 
-        <label for="noticeDetails">Notice Details</label>
+        <label for="noticeDetails">
+          Notice Details
+        </label>
 
         <textarea
           id="noticeDetails"
@@ -328,31 +448,44 @@
 
       </form>
 
-      <p id="noticeMessage" class="message" role="status"></p>
+      <p
+        id="noticeMessage"
+        class="message"
+        role="status"
+      ></p>
 
     </div>
 
     <!-- PUBLISHED NOTICES -->
 
     <div class="content-card">
+
       <h3>Published Notices</h3>
 
       <div id="adminNotices">
         No notices available.
       </div>
+
     </div>
 
   </section>
 
 </main>
 
+<!-- FOOTER -->
+
 <footer class="school-footer">
+
   <p>M.S.D. ENGLISH ACADEMY</p>
+
   <small>Education • Discipline • Success</small>
+
 </footer>
 
-<script src="app.js"></script>
+<!-- APP JAVASCRIPT -->
+
+<script src="app.js?v=4"></script>
 
 </body>
-</html>
-
+          </html>
+          
