@@ -4,361 +4,219 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#123b72">
-  <link rel="manifest" href="manifest.json">
+
   <title>M.S.D. English Academy | School App</title>
 
-  <style>
-    * { box-sizing: border-box; }
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f1f5fb;
-      color: #17243a;
-    }
-
-    header {
-      background: #123b72;
-      color: white;
-      padding: 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    header img {
-      width: 52px;
-      height: 52px;
-      object-fit: contain;
-      background: white;
-      border-radius: 12px;
-    }
-
-    header h2 { margin: 0; font-size: 19px; }
-    header small { display: block; margin-top: 5px; }
-
-    main {
-      max-width: 650px;
-      margin: 25px auto;
-      padding: 15px;
-    }
-
-    .card {
-      background: white;
-      padding: 22px;
-      border-radius: 16px;
-      box-shadow: 0 4px 18px #102c5012;
-      margin-bottom: 18px;
-    }
-
-    h2, h3 { color: #123b72; }
-
-    input, textarea, select, button {
-      width: 100%;
-      padding: 13px;
-      margin: 8px 0;
-      border-radius: 9px;
-      font-size: 16px;
-    }
-
-    input, textarea, select {
-      border: 1px solid #ccd5e2;
-      background: #fff;
-      color: #17243a;
-    }
-
-    button {
-      border: 0;
-      background: #123b72;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #e8eef7;
-      color: #123b72;
-    }
-
-    .hidden { display: none !important; }
-
-    .muted {
-      color: #64748b;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .item {
-      border: 1px solid #e0e7f0;
-      padding: 13px;
-      border-radius: 10px;
-      margin: 10px 0;
-    }
-
-    .item h4 {
-      margin: 0 0 7px;
-      color: #123b72;
-    }
-
-    #message, #adminMessage,
-    #noticeMessage, #studentCreateMessage {
-      padding: 10px 0;
-      color: #b42318;
-      overflow-wrap: anywhere;
-    }
-
-    .success { color: #187443 !important; }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #64748b;
-    }
-
-    .section-note {
-      background: #eef4ff;
-      border-left: 4px solid #123b72;
-      padding: 12px;
-      border-radius: 8px;
-      margin: 12px 0;
-    }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
-<header>
-  <img src="icon-192-1.png" alt="School Logo">
-  <div>
-    <h2>M.S.D. ENGLISH ACADEMY</h2>
-    <small>Mata Santi Devi English Academy</small>
-  </div>
-</header>
-
-<main>
-
-  <!-- STUDENT LOGIN -->
-  <section id="loginPage" class="card">
-    <h2>Student Login</h2>
-    <p class="muted">
-      Login using your school Roll Number and Password.
-    </p>
-
-    <form id="studentLoginForm">
-      <input
-        id="rollNumber"
-        type="text"
-        placeholder="Enter Roll Number"
-        autocomplete="username"
-        required
-      >
-
-      <input
-        id="studentPassword"
-        type="password"
-        placeholder="Enter Password"
-        autocomplete="current-password"
-        required
-      >
-
-      <button type="submit">Student Login</button>
-    </form>
-
-    <button id="showAdminLogin" class="secondary" type="button">
-      Super Admin Login
-    </button>
-
-    <p id="message" role="status"></p>
-
-    <p class="muted">
-      Student accounts are created only by the School Super Admin.
-      Contact school administration if you do not have login details.
-    </p>
-  </section>
-
-  <!-- ADMIN LOGIN -->
-  <section id="adminLoginPage" class="card hidden">
-    <h2>Super Admin Login</h2>
-
-    <form id="adminLoginForm">
-      <input
-        id="adminEmail"
-        type="email"
-        placeholder="Admin Email"
-        autocomplete="username"
-        required
-      >
-
-      <input
-        id="adminPassword"
-        type="password"
-        placeholder="Admin Password"
-        autocomplete="current-password"
-        required
-      >
-
-      <button type="submit">Login as Super Admin</button>
-    </form>
-
-    <button id="backToStudentLogin" class="secondary" type="button">
-      Back to Student Login
-    </button>
-
-    <p id="adminMessage" role="status"></p>
-  </section>
-
-  <!-- STUDENT DASHBOARD -->
-  <section id="studentDashboard" class="hidden">
-
-    <div class="card">
-      <h2>Student Dashboard</h2>
-      <h3 id="studentName">Student</h3>
-      <p id="studentInfo" class="muted"></p>
-      <button id="studentLogout" type="button">Logout</button>
+  <header class="school-header">
+    <div class="school-brand">
+      <img src="icon-192-1.png" alt="School Logo" class="school-logo">
+      <div>
+        <h1>M.S.D. ENGLISH ACADEMY</h1>
+        <p>MATA SANTI DEVI ENGLISH ACADEMY</p>
+        <small>Khushnampur Dariyapur Nevada Azamgarh</small>
+      </div>
     </div>
+  </header>
 
-    <div class="card">
-      <h3>My Homework & Classwork</h3>
-      <div id="homeworkList">Loading homework...</div>
-    </div>
+  <main class="main-container">
 
-    <div class="card">
-      <h3>School Notices</h3>
-      <div id="studentNotices">Loading notices...</div>
-    </div>
-
-  </section>
-
-  <!-- SUPER ADMIN DASHBOARD -->
-  <section id="adminDashboard" class="hidden">
-
-    <div class="card">
-      <h2>Super Admin Panel</h2>
-      <p class="muted">M.S.D. English Academy</p>
-      <button id="adminLogout" type="button">Logout</button>
-    </div>
-
-    <!-- STUDENT MANAGEMENT -->
-    <div class="card">
-      <h3>Create Student Profile</h3>
-
-      <p class="muted">
-        Only Super Admin can create student profiles.
-        Enter the student's correct school details.
-      </p>
-
-      <div class="section-note">
-        <strong>Important:</strong>
-        Student Login ID will be generated using the Roll Number.
-        Account creation will be connected to a secure Firebase backend.
+    <!-- STUDENT LOGIN -->
+    <section id="loginPage" class="page login-page">
+      <div class="welcome-section">
+        <h2>Welcome to School App</h2>
+        <p>Student Login Portal</p>
       </div>
 
-      <form id="studentCreateForm">
+      <div class="form-card">
+        <h2>Student Login</h2>
+        <p class="form-subtitle">Login using your Roll Number and Password</p>
 
-        <input
-          id="newStudentName"
-          type="text"
-          placeholder="Student Full Name"
-          required
-        >
+        <form id="studentLoginForm">
+          <label for="rollNumber">Roll Number</label>
+          <input
+            type="text"
+            id="rollNumber"
+            placeholder="Enter your roll number"
+            autocomplete="username"
+            required
+          >
 
-        <input
-          id="newStudentRoll"
-          type="text"
-          placeholder="Student Roll Number"
-          required
-        >
+          <label for="studentPassword">Password</label>
+          <input
+            type="password"
+            id="studentPassword"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
 
-        <input
-          id="newStudentClass"
-          type="text"
-          placeholder="Class (Example: 9)"
-          required
-        >
+          <button type="submit" class="primary-button">
+            Student Login
+          </button>
+        </form>
 
-        <input
-          id="newStudentSection"
-          type="text"
-          placeholder="Section (Example: A)"
-          required
-        >
+        <p id="message" class="message" role="status"></p>
 
-        <input
-          id="newStudentMobile"
-          type="tel"
-          placeholder="Parent Mobile Number"
-          inputmode="numeric"
-          pattern="[0-9]{10}"
-          maxlength="10"
-          required
-        >
+        <div class="login-footer">
+          <p>Only registered students can login.</p>
+          <button type="button" id="showAdminLogin" class="text-button">
+            Super Admin Login
+          </button>
+        </div>
+      </div>
+    </section>
 
-        <button id="createStudentButton" type="submit">
-          Create Student Account
+    <!-- SUPER ADMIN LOGIN -->
+    <section id="adminLoginPage" class="page login-page" hidden>
+      <div class="form-card">
+        <h2>Super Admin Login</h2>
+        <p class="form-subtitle">Authorized school administrator only</p>
+
+        <form id="adminLoginForm">
+          <label for="adminEmail">Admin Email</label>
+          <input
+            type="email"
+            id="adminEmail"
+            placeholder="Enter admin email"
+            autocomplete="username"
+            required
+          >
+
+          <label for="adminPassword">Password</label>
+          <input
+            type="password"
+            id="adminPassword"
+            placeholder="Enter admin password"
+            autocomplete="current-password"
+            required
+          >
+
+          <button type="submit" class="primary-button">
+            Admin Login
+          </button>
+        </form>
+
+        <p id="adminMessage" class="message" role="status"></p>
+
+        <button type="button" id="backToStudentLogin" class="text-button">
+          Back to Student Login
         </button>
-
-      </form>
-
-      <p id="studentCreateMessage" role="status"></p>
-
-      <p class="muted">
-        Do not share student passwords publicly. Account credentials
-        must be generated and delivered through a secure process.
-      </p>
-    </div>
-
-    <!-- STUDENT RECORDS -->
-    <div class="card">
-      <h3>Student Records</h3>
-      <div id="studentsList">
-        Student records will appear here.
       </div>
-    </div>
+    </section>
 
-    <!-- PUBLISH NOTICE -->
-    <div class="card">
-      <h3>Publish School Notice</h3>
+    <!-- STUDENT DASHBOARD -->
+    <section id="studentDashboard" class="page dashboard-page" hidden>
 
-      <form id="noticeForm">
-        <input
-          id="noticeTitle"
-          placeholder="Notice Title"
-          required
-        >
+      <div class="dashboard-heading">
+        <div>
+          <h2>Student Dashboard</h2>
+          <p>Welcome to M.S.D. English Academy</p>
+        </div>
 
-        <textarea
-          id="noticeDetails"
-          rows="4"
-          placeholder="Notice Details"
-          required
-        ></textarea>
+        <button type="button" id="studentLogout" class="logout-button">
+          Logout
+        </button>
+      </div>
 
-        <button type="submit">Publish Notice</button>
-      </form>
+      <div class="content-card">
+        <h3>My Student Profile</h3>
+        <div id="studentName"></div>
+        <div id="studentInfo"></div>
+      </div>
 
-      <p id="noticeMessage" role="status"></p>
-    </div>
+      <div class="content-card">
+        <h3>Homework & Classwork</h3>
+        <div id="homeworkList">
+          <p>No homework available.</p>
+        </div>
+      </div>
 
-    <!-- RECENT NOTICES -->
-    <div class="card">
-      <h3>Recent Notices</h3>
-      <div id="adminNotices">Loading notices...</div>
-    </div>
+      <div class="content-card">
+        <h3>School Notices</h3>
+        <div id="studentNotices">
+          <p>No notices available.</p>
+        </div>
+      </div>
 
-  </section>
+    </section>
 
-</main>
+    <!-- ADMIN DASHBOARD -->
+    <section id="adminDashboard" class="page dashboard-page" hidden>
 
-<footer>
-  M.S.D. English Academy · Khushnampur Dariyapur,
-  Newada, Azamgarh
-</footer>
+      <div class="dashboard-heading">
+        <div>
+          <h2>Super Admin Dashboard</h2>
+          <p>School Management Portal</p>
+        </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+        <button type="button" id="adminLogout" class="logout-button">
+          Logout
+        </button>
+      </div>
 
-<script src="app.js"></script>
+      <div class="content-card">
+        <h3>Publish School Notice</h3>
+
+        <form id="noticeForm">
+          <label for="noticeTitle">Notice Title</label>
+          <input
+            type="text"
+            id="noticeTitle"
+            placeholder="Enter notice title"
+            required
+          >
+
+          <label for="noticeDetails">Notice Details</label>
+          <textarea
+            id="noticeDetails"
+            rows="4"
+            placeholder="Write notice details"
+            required
+          ></textarea>
+
+          <button type="submit" class="primary-button">
+            Publish Notice
+          </button>
+        </form>
+
+        <p id="noticeMessage" class="message" role="status"></p>
+      </div>
+
+      <div class="content-card">
+        <h3>Published Notices</h3>
+        <div id="adminNotices">
+          <p>No notices available.</p>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <h3>Student Accounts</h3>
+        <p>
+          Student account creation will be available through a
+          secure administrator-only process.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="school-footer">
+    <p>M.S.D. ENGLISH ACADEMY</p>
+    <small>Education • Discipline • Success</small>
+  </footer>
+
+  <script src="app.js"></script>
 
 </body>
 </html>
