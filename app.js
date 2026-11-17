@@ -1,6 +1,8 @@
 
+// ==========================================
 // M.S.D. ENGLISH ACADEMY
-// Student Profile + Login + Admin System
+// STUDENT + SUPER ADMIN LOGIN SYSTEM
+// ==========================================
 
 const firebaseConfig = {
   apiKey: "AIzaSyDUbpRqEsJpPWiug7HnQMMcfAP6MsQKnCk",
@@ -12,12 +14,14 @@ const firebaseConfig = {
   measurementId: "G-PMY610FVNQ"
 };
 
+// FIREBASE INITIALIZATION
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+
 const $ = id => document.getElementById(id);
 
 let currentUser = null;
@@ -25,9 +29,16 @@ let currentRole = null;
 let studentProfile = null;
 let loginInProgress = false;
 
+// ==========================================
+// COMMON FUNCTIONS
+// ==========================================
+
 function on(id, eventName, callback) {
   const element = $(id);
-  if (element) element.addEventListener(eventName, callback);
+
+  if (element) {
+    element.addEventListener(eventName, callback);
+  }
 }
 
 function normalizeText(value) {
@@ -35,7 +46,10 @@ function normalizeText(value) {
 }
 
 function cleanRollNumber(value) {
-  return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
 }
 
 function studentLoginEmail(roll) {
@@ -44,32 +58,46 @@ function studentLoginEmail(roll) {
 }
 
 function showMessage(id, message, success = false) {
-  const el = $(id);
-  if (!el) return;
-  el.textContent = message;
-  el.className = success ? "success" : "";
+  const element = $(id);
+
+  if (!element) return;
+
+  element.textContent = message;
+  element.className = success ? "success" : "message";
 }
 
+// ==========================================
+// SCREEN NAVIGATION - FIXED
+// ==========================================
+
 function showScreen(screenId) {
-  [
+  const screens = [
     "loginPage",
     "adminLoginPage",
     "studentDashboard",
     "adminDashboard"
-  ].forEach(id => {
-    if ($(id)) $(id).classList.add("hidden");
-  });
+  ];
 
-  if ($(screenId)) $(screenId).classList.remove("hidden");
+  screens.forEach(id => {
+    const screen = $(id);
+
+    if (screen) {
+      screen.hidden = id !== screenId;
+    }
+  });
 }
+
+// ==========================================
+// ADMIN CHECK
+// ==========================================
 
 function isActiveAdmin() {
   return currentUser && currentRole === "superAdmin";
 }
 
-// ===================================
-// STUDENT PROFILE DISPLAY
-// ===================================
+// ==========================================
+// STUDENT PROFILE
+// ==========================================
 
 function showStudentProfile(profile) {
   const photo = $("studentPhoto");
@@ -93,45 +121,57 @@ function showStudentProfile(profile) {
   }
 
   if (photo) {
-    const photoURL = profile.photoURL || profile.photoUrl || "";
+    const photoURL =
+      profile.photoURL || profile.photoUrl || "";
 
-    if (photoURL) {
+    if (
+      photoURL &&
+      /^https:\/\//i.test(photoURL)
+    ) {
       photo.src = photoURL;
-      photo.classList.remove("hidden");
+      photo.hidden = false;
+
       photo.onerror = () => {
         photo.removeAttribute("src");
-        photo.classList.add("hidden");
+        photo.hidden = true;
       };
     } else {
       photo.removeAttribute("src");
-      photo.classList.add("hidden");
+      photo.hidden = true;
     }
   }
 }
 
-// ===================================
+// ==========================================
 // STUDENT LOGIN
-// ===================================
+// ==========================================
 
 on("studentLoginForm", "submit", async event => {
   event.preventDefault();
 
   if (loginInProgress) return;
-  loginInProgress = true;
 
   const roll = cleanRollNumber($("rollNumber")?.value);
   const password = $("studentPassword")?.value || "";
 
+  if (!roll || !password) {
+    showMessage("message", "Roll Number and Password required.");
+    return;
+  }
+
+  loginInProgress = true;
   showMessage("message", "Checking student login...");
 
   try {
-    const credential = await auth.signInWithEmailAndPassword(
-      studentLoginEmail(roll),
-      password
-    );
+    const credential =
+      await auth.signInWithEmailAndPassword(
+        studentLoginEmail(roll),
+        password
+      );
 
     const doc = await db.collection("students")
-      .doc(credential.user.uid).get();
+      .doc(credential.user.uid)
+      .get();
 
     if (!doc.exists) {
       await auth.signOut();
@@ -155,47 +195,79 @@ on("studentLoginForm", "submit", async event => {
     currentRole = "student";
     studentProfile = profile;
 
+    $("studentLoginForm")?.reset();
+
     openStudentDashboard();
 
   } catch (error) {
-    console.error(error);
-    showMessage("message", "Login Error: " + error.message);
+    console.error("STUDENT LOGIN ERROR:", error);
+
+    showMessage(
+      "message",
+      "Student Login Error: " + error.message
+    );
+
   } finally {
     loginInProgress = false;
   }
 });
 
-// ===================================
+// ==========================================
 // SUPER ADMIN LOGIN
-// ===================================
+// ==========================================
 
 on("adminLoginForm", "submit", async event => {
   event.preventDefault();
 
   if (loginInProgress) return;
-  loginInProgress = true;
 
   const email = $("adminEmail")?.value.trim();
-  const password = $("adminPassword")?.value;
+  const password = $("adminPassword")?.value || "";
+
+  if (!email || !password) {
+    showMessage("adminMessage", "Email and Password required.");
+    return;
+  }
+
+  loginInProgress = true;
 
   showMessage("adminMessage", "Checking Admin...");
 
   try {
-    const credential = await auth.signInWithEmailAndPassword(
-      email,
-      password
-    );
+    const credential =
+      await auth.signInWithEmailAndPassword(
+        email,
+        password
+      );
 
     const doc = await db.collection("admins")
-      .doc(credential.user.uid).get();
+      .doc(credential.user.uid)
+      .get();
+
+    if (!doc.exists) {
+      await auth.signOut();
+
+      showMessage(
+        "adminMessage",
+        "Admin account not found in Firestore."
+      );
+
+      return;
+    }
+
+    const admin = doc.data();
 
     if (
-      !doc.exists ||
-      normalizeText(doc.data().role) !== "superadmin" ||
-      normalizeText(doc.data().status) !== "active"
+      normalizeText(admin.role) !== "superadmin" ||
+      normalizeText(admin.status) !== "active"
     ) {
       await auth.signOut();
-      showMessage("adminMessage", "Active Super Admin account not found.");
+
+      showMessage(
+        "adminMessage",
+        "Active Super Admin account not found."
+      );
+
       return;
     }
 
@@ -203,21 +275,28 @@ on("adminLoginForm", "submit", async event => {
     currentRole = "superAdmin";
     studentProfile = null;
 
+    $("adminLoginForm")?.reset();
+
     showScreen("adminDashboard");
-    showMessage("adminMessage", "Super Admin login successful!", true);
+
     loadNotices("adminNotices");
 
   } catch (error) {
-    console.error(error);
-    showMessage("adminMessage", "Admin Error: " + error.message);
+    console.error("ADMIN LOGIN ERROR:", error);
+
+    showMessage(
+      "adminMessage",
+      "Admin Login Error: " + error.message
+    );
+
   } finally {
     loginInProgress = false;
   }
 });
 
-// ===================================
-// SCREEN NAVIGATION
-// ===================================
+// ==========================================
+// LOGIN PAGE NAVIGATION
+// ==========================================
 
 on("showAdminLogin", "click", () => {
   showMessage("adminMessage", "");
@@ -229,26 +308,28 @@ on("backToStudentLogin", "click", () => {
   showScreen("loginPage");
 });
 
-// ===================================
+// ==========================================
 // STUDENT DASHBOARD
-// ===================================
+// ==========================================
 
 function openStudentDashboard() {
   if (!studentProfile) return;
 
   showStudentProfile(studentProfile);
+
   showScreen("studentDashboard");
 
   loadHomework(studentProfile.classId);
   loadNotices("studentNotices");
 }
 
-// ===================================
+// ==========================================
 // HOMEWORK
-// ===================================
+// ==========================================
 
 async function loadHomework(classId) {
   const container = $("homeworkList");
+
   if (!container) return;
 
   container.textContent = "Loading homework...";
@@ -272,6 +353,7 @@ async function loadHomework(classId) {
 
     snapshot.forEach(doc => {
       const data = doc.data();
+
       const item = document.createElement("div");
       item.className = "item";
 
@@ -279,27 +361,32 @@ async function loadHomework(classId) {
       title.textContent = data.title || "Homework";
 
       const subject = document.createElement("p");
-      subject.textContent = "Subject: " + (data.subject || "");
+      subject.textContent =
+        "Subject: " + (data.subject || "");
 
       const details = document.createElement("p");
       details.textContent = data.details || "";
 
       item.append(title, subject, details);
+
       container.appendChild(item);
     });
 
   } catch (error) {
-    console.error(error);
-    container.textContent = "Homework Error: " + error.message;
+    console.error("HOMEWORK ERROR:", error);
+
+    container.textContent =
+      "Homework Error: " + error.message;
   }
 }
 
-// ===================================
+// ==========================================
 // NOTICES
-// ===================================
+// ==========================================
 
 async function loadNotices(containerId) {
   const container = $(containerId);
+
   if (!container) return;
 
   container.textContent = "Loading notices...";
@@ -318,6 +405,7 @@ async function loadNotices(containerId) {
 
     snapshot.forEach(doc => {
       const data = doc.data();
+
       const item = document.createElement("div");
       item.className = "item";
 
@@ -328,115 +416,74 @@ async function loadNotices(containerId) {
       details.textContent = data.details || "";
 
       item.append(title, details);
+
       container.appendChild(item);
     });
 
   } catch (error) {
-    console.error(error);
-    container.textContent = "Notice Error: " + error.message;
+    console.error("NOTICE ERROR:", error);
+
+    container.textContent =
+      "Notice Error: " + error.message;
   }
 }
 
-// ===================================
+// ==========================================
 // PUBLISH NOTICE
-// ===================================
+// ==========================================
 
 on("noticeForm", "submit", async event => {
   event.preventDefault();
 
   if (!isActiveAdmin()) {
-    showMessage("noticeMessage", "Only Super Admin can publish.");
+    showMessage(
+      "noticeMessage",
+      "Only Super Admin can publish notices."
+    );
+
     return;
   }
 
   const title = $("noticeTitle")?.value.trim();
   const details = $("noticeDetails")?.value.trim();
 
-  if (!title || !details) return;
+  if (!title || !details) {
+    showMessage("noticeMessage", "Please fill all fields.");
+    return;
+  }
 
   try {
     await db.collection("notices").add({
       title,
       details,
       createdBy: currentUser.uid,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt:
+        firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    $("noticeForm").reset();
-    showMessage("noticeMessage", "Notice published!", true);
-    loadNotices("adminNotices");
-
-  } catch (error) {
-    showMessage("noticeMessage", error.message);
-  }
-});
-
-// ===================================
-// CREATE STUDENT PROFILE
-// ===================================
-
-// UID must belong to a student account
-// already provisioned in Firebase Authentication.
-// This function does NOT create an Auth account.
-
-on("studentProfileForm", "submit", async event => {
-  event.preventDefault();
-
-  if (!isActiveAdmin()) {
-    showMessage("studentCreateMessage", "Only Super Admin can create profiles.");
-    return;
-  }
-
-  const uid = $("newStudentUID")?.value.trim();
-  const fullName = $("newStudentName")?.value.trim();
-  const rollNumber = cleanRollNumber($("newStudentRoll")?.value);
-  const classId = $("newStudentClass")?.value.trim();
-  const photoURL = $("newStudentPhoto")?.value.trim();
-  const homeAddress = $("newStudentAddress")?.value.trim();
-
-  if (!uid || !fullName || !rollNumber || !classId || !homeAddress) {
-    showMessage("studentCreateMessage", "Please fill all required fields.");
-    return;
-  }
-
-  try {
-    const studentRef = db.collection("students").doc(uid);
-    const existing = await studentRef.get();
-
-    if (existing.exists) {
-      showMessage("studentCreateMessage", "This student profile already exists.");
-      return;
-    }
-
-    await studentRef.set({
-      fullName,
-      rollNumber,
-      classId,
-      photoURL,
-      homeAddress,
-      role: "student",
-      status: "active",
-      createdBy: currentUser.uid,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    $("studentProfileForm").reset();
+    $("noticeForm")?.reset();
 
     showMessage(
-      "studentCreateMessage",
-      "Student profile created successfully!",
+      "noticeMessage",
+      "Notice published successfully!",
       true
     );
 
+    loadNotices("adminNotices");
+
   } catch (error) {
-    console.error(error);
-    showMessage("studentCreateMessage", "Profile Error: " + error.message);
+    console.error("PUBLISH NOTICE ERROR:", error);
+
+    showMessage(
+      "noticeMessage",
+      "Notice Error: " + error.message
+    );
   }
 });
 
-// ===================================
+// ==========================================
 // LOGOUT
-// ===================================
+// ==========================================
 
 async function logoutUser() {
   try {
@@ -452,6 +499,8 @@ async function logoutUser() {
     showScreen("loginPage");
 
   } catch (error) {
+    console.error("LOGOUT ERROR:", error);
+
     alert("Logout Error: " + error.message);
   }
 }
@@ -459,9 +508,9 @@ async function logoutUser() {
 on("studentLogout", "click", logoutUser);
 on("adminLogout", "click", logoutUser);
 
-// ===================================
-// RESTORE SESSION
-// ===================================
+// ==========================================
+// RESTORE LOGIN SESSION
+// ==========================================
 
 auth.onAuthStateChanged(async user => {
   if (loginInProgress) return;
@@ -470,12 +519,16 @@ auth.onAuthStateChanged(async user => {
     currentUser = null;
     currentRole = null;
     studentProfile = null;
+
     showScreen("loginPage");
+
     return;
   }
 
   try {
-    const adminDoc = await db.collection("admins").doc(user.uid).get();
+    const adminDoc = await db.collection("admins")
+      .doc(user.uid)
+      .get();
 
     if (
       adminDoc.exists &&
@@ -484,12 +537,17 @@ auth.onAuthStateChanged(async user => {
     ) {
       currentUser = user;
       currentRole = "superAdmin";
+
       showScreen("adminDashboard");
+
       loadNotices("adminNotices");
+
       return;
     }
 
-    const studentDoc = await db.collection("students").doc(user.uid).get();
+    const studentDoc = await db.collection("students")
+      .doc(user.uid)
+      .get();
 
     if (
       studentDoc.exists &&
@@ -499,19 +557,30 @@ auth.onAuthStateChanged(async user => {
       currentUser = user;
       currentRole = "student";
       studentProfile = studentDoc.data();
+
       openStudentDashboard();
+
       return;
     }
 
     await auth.signOut();
+
     showScreen("loginPage");
 
   } catch (error) {
     console.error("SESSION ERROR:", error);
+
     await auth.signOut();
+
     showScreen("loginPage");
-    showMessage("message", "Session Error: " + error.message);
+
+    showMessage(
+      "message",
+      "Session Error: " + error.message
+    );
   }
 });
 
-console.log("M.S.D. English Academy Profile System Loaded");
+console.log(
+  "M.S.D. ENGLISH ACADEMY APP LOADED SUCCESSFULLY"
+);
